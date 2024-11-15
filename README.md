@@ -9,13 +9,14 @@
 ## Tools and Materials
 
 1. **Engines, Libraries, & Frameworks**
-   - Our team will begin development with the Phaser 3 platform for web games.
+   - Our team will begin development with the Phaser 3 platform for web games, as we have extensive experience with this framework.
    - Our game will feature a 2D, pixel art style.
    - We will use the V8 engine running on Deno for development.
    - We will deploy prototypes to GitHub Pages.
 
 2. **Programming Languages and Data Languages**
    - Initially, our team will use TypeScript, then switch to C# in the second half of our project.
+   - We choose TSC initially because we all have experience with it and feel comfortable developing Phaser Games
    - We are experimenting with simple custom DSLs for subroutines in our software.
    - We realistically plan to use something like JSON or SQL (with a PostgreSQL-backed database) for data storage.
 
@@ -24,7 +25,7 @@
    - Deno (provides development environment runtime, linter, and formatter)
    - Git (version control)
    - Tiled: We will build our tilemaps on Tiled so, when we switch from Phaser to Unity, we can import the entire map seamlessly.
-
+   - All of these tools were selected with confidence as we are all experienced with them. 
 4. **Alternate Platform Choice**
    - Our group will transition from Phaser 3 to Unity for the required platform switch.
    - We plan to use Brace to convert as much of the codebase as possible, manually resolving the rest.
