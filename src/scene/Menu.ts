@@ -8,7 +8,7 @@ export default class Menu extends Phaser.Scene {
   init() {}
   preload() {}
   create() {
-    this.scene.start('menuScene')
+    this.scene.start("playScene");
   }
 
   //deno-lint-ignore no-unused-vars

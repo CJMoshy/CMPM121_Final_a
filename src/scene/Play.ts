@@ -3,6 +3,7 @@ import GAME_CONFIG from "./GameConfig.ts";
 
 export default class Play extends Phaser.Scene {
   private elapsedTime!: Phaser.GameObjects.Text;
+  private standardTimeEvent!: Phaser.Time.TimerEvent;
   private currentTimeEnum!: number;
   constructor() {
     super({ key: "playScene" });
@@ -18,7 +19,7 @@ export default class Play extends Phaser.Scene {
       height as number / 2,
       GAME_CONFIG.timeStamps[this.currentTimeEnum],
     );
-    // this.beginTimeElapsing();
+    this.beginTimeElapsing();
   }
 
   //deno-lint-ignore no-unused-vars
@@ -26,13 +27,21 @@ export default class Play extends Phaser.Scene {
   }
 
   beginTimeElapsing() {
-    this.time.addEvent({
-      callback: () =>
+    this.standardTimeEvent = this.time.addEvent({
+      callback: () => {
+        if (this.currentTimeEnum === GAME_CONFIG.timeStamps.length) {
+          this.currentTimeEnum = 0;
+        } else this.currentTimeEnum++;
         this.elapsedTime.setText(
-          GAME_CONFIG.timeStamps[++this.currentTimeEnum],
-        ),
+          GAME_CONFIG.timeStamps[this.currentTimeEnum],
+        );
+      },
       repeat: -1,
       delay: 5000,
     });
+  }
+
+  beginRapidTimeElapsing() {
+    this.time.removeEvent(this.standardTimeEvent);
   }
 }
