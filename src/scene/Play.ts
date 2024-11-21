@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import GAME_CONFIG from "./GameConfig.ts";
+import GAME_CONFIG from "../util/GameConfig.ts";
 
 export default class Play extends Phaser.Scene {
   private elapsedTimeText!: Phaser.GameObjects.Text;

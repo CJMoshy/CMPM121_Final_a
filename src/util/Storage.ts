@@ -6,11 +6,11 @@
  */
 
 export function serializeObj<T>(arg: T) {
-    return JSON.stringify(arg);
+  return JSON.stringify(arg);
 }
 
 export function deSerializeObj(arg: string) {
-    return JSON.parse(arg);
+  return JSON.parse(arg);
 }
 
 // TODO...
