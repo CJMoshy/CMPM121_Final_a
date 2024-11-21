@@ -20,5 +20,5 @@ declare enum growthLevel {
 
 interface Plant {
   species: PlantSpecies;
-  growthLevel: growthLevel;
+  growthLevel: number;
 }

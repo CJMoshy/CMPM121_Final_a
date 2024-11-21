@@ -5,7 +5,7 @@ import Menu from "./scene/Menu.ts";
 import Credit from "./scene/Credits.ts";
 import Play from "./scene/Play.ts";
 
-const GAME_CONFIG = {
+const CONFIG = {
   type: Phaser.CANVAS,
   parent: "phaser-game",
   scale: {
@@ -23,5 +23,5 @@ const GAME_CONFIG = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  new Phaser.Game(GAME_CONFIG);
+  new Phaser.Game(CONFIG);
 });
