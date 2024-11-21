@@ -2,9 +2,10 @@ import Phaser from "phaser";
 import GAME_CONFIG from "./GameConfig.ts";
 
 export default class Play extends Phaser.Scene {
-  private elapsedTime!: Phaser.GameObjects.Text;
-  private standardTimeEvent!: Phaser.Time.TimerEvent;
+  private elapsedTimeText!: Phaser.GameObjects.Text;
+  private elapsedTimeEvent!: Phaser.Time.TimerEvent;
   private currentTimeEnum!: number;
+  private elapsedTimeToggle!: boolean;
   constructor() {
     super({ key: "playScene" });
   }
@@ -12,36 +13,41 @@ export default class Play extends Phaser.Scene {
   init() {}
   preload() {}
   create() {
-    const { width, height } = this.game.config;
-    this.currentTimeEnum = 0; // in the future this will have to be init from local storage
-    this.elapsedTime = this.add.text(
-      width as number / 2,
-      height as number / 2,
-      GAME_CONFIG.timeStamps[this.currentTimeEnum],
-    );
-    this.beginTimeElapsing();
+    this.initTimeElapsing();
   }
 
   //deno-lint-ignore no-unused-vars
   override update(time: number, delta: number): void {
   }
 
-  beginTimeElapsing() {
-    this.standardTimeEvent = this.time.addEvent({
+  initTimeElapsing() {
+    const { timeStamps } = GAME_CONFIG.TIME;
+    this.currentTimeEnum = 0; // in the future this will have to be init from local storage
+    this.elapsedTimeText = this.add.text(
+      GAME_CONFIG.UI.BORDER_PADDING,
+      GAME_CONFIG.UI.BORDER_PADDING,
+      timeStamps[this.currentTimeEnum],
+    );
+    this.elapsedTimeToggle = false; // time is initially not fast (or standard)
+    this.setTimeElapsing(this.elapsedTimeToggle);
+  }
+
+  setTimeElapsing(fast: boolean) {
+    this.time.removeEvent(this.elapsedTimeEvent);
+    this.elapsedTimeEvent = this.time.addEvent({
       callback: () => {
-        if (this.currentTimeEnum === GAME_CONFIG.timeStamps.length) {
+        const { timeStamps } = GAME_CONFIG.TIME;
+        if (this.currentTimeEnum === timeStamps.length - 1) {
           this.currentTimeEnum = 0;
         } else this.currentTimeEnum++;
-        this.elapsedTime.setText(
-          GAME_CONFIG.timeStamps[this.currentTimeEnum],
+        this.elapsedTimeText.setText(
+          timeStamps[this.currentTimeEnum],
         );
       },
       repeat: -1,
-      delay: 5000,
+      delay: fast
+        ? GAME_CONFIG.TIME.ACCEL_IN_GAME_HOUR
+        : GAME_CONFIG.TIME.IN_GAME_HOUR,
     });
-  }
-
-  beginRapidTimeElapsing() {
-    this.time.removeEvent(this.standardTimeEvent);
   }
 }
