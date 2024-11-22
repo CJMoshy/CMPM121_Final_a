@@ -13,29 +13,30 @@ export default class Play extends Phaser.Scene {
   private elapsedTimeText!: Phaser.GameObjects.Text;
   private elapsedTimeEvent!: Phaser.Time.TimerEvent;
   private currentTimeEnum!: number;
-
   private player!: Player;
-
   private plantableCells!: Cell[];
-
   private UIWindowOpen!: boolean;
-
   private tileOutline!: Phaser.GameObjects.Image;
-
   private turnCounter!: number;
   private turnText!: Phaser.GameObjects.Text;
+  private writingText!: Phaser.GameObjects.Text;
+  private writingBox!: Phaser.GameObjects.Sprite;
+  private TEXT_X!: number;
+  private TEXT_Y!: number;
+  private reapBtn!: Phaser.GameObjects.Sprite;
+  private sowBtn!: Phaser.GameObjects.Sprite;
+  private selectedCell!: Cell | undefined;
 
   constructor() {
     super({ key: "playScene" });
     this.plantableCells = [];
     this.UIWindowOpen = false;
+    this.selectedCell = undefined;
   }
 
   init() {}
   preload() {}
   create() {
-    const { width, height } = this.game.config;
-
     const map = this.add.tilemap("FarmTilemap");
     const tiles = map.addTilesetImage("FarmTileset", "base-tileset")!;
 
@@ -44,57 +45,73 @@ export default class Play extends Phaser.Scene {
     map.createLayer(
       "Ground",
       tiles,
-      width as number / 2 - 80,
-      height as number / 2 - 80,
-    );
+      0,
+      0,
+    )?.setScale(4);
     map.createLayer(
       "House",
       tiles,
-      width as number / 2 - 80,
-      height as number / 2 - 80,
-    );
+      0,
+      0,
+    )?.setScale(4);
     const dirtLayer = map.createLayer(
       "Dirt",
       tiles,
-      width as number / 2 - 80,
-      height as number / 2 - 80,
-    );
+      0,
+      0,
+    )?.setScale(4);
     dirtLayer?.setCollisionByProperty({ Interactable: true });
     map.setCollisionByProperty({ OpenWindow: true });
 
-    const turnButton = this.add.image(140, 140, "turnButton");
-    turnButton.setInteractive();
+    const turnButton = this.add.image(
+      this.game.config.width as number - GAME_CONFIG.UI.BORDER_PADDING,
+      this.game.config.height as number - GAME_CONFIG.UI.BORDER_PADDING * 2.5,
+      "turnButton",
+    );
+    turnButton.setInteractive().setScale(3);
     turnButton.on("pointerdown", () => {
       this.advanceTurn();
-      console.log(`Current turn is ${this.turnCounter}`);
+      this.setTimeElapsing();
+      // console.log(`Current turn is ${this.turnCounter}`);
     });
 
-    this.turnText = this.add.text(140, 4, this.turnCounter.toString(), {
-      fontFamily: "Serif",
-    }).setFontSize(15);
+    this.turnText = this.add.text(
+      this.game.config.width as number - GAME_CONFIG.UI.BORDER_PADDING,
+      this.game.config.height as number - GAME_CONFIG.UI.BORDER_PADDING,
+      this.turnCounter.toString(),
+      {
+        fontFamily: "Serif",
+      },
+    ).setFontSize(15);
 
     const iterableDirt = map.getObjectLayer("Plantable")!;
     iterableDirt.objects.forEach((element) => {
       console.log(
         "making planterbox",
-        Math.round(element.x as number),
-        Math.round(element.y as number),
+        Math.floor(element.x as number),
+        Math.floor(element.y as number),
       );
       this.plantableCells.push({
-        i: Math.round(element.x as number),
-        j: Math.round(element.y as number),
+        i: Math.floor(element.x as number),
+        j: Math.floor(element.y as number),
         planterBox: {
           waterLevel: 0,
           sunLevel: 0,
           plant: {
-            species: "something",
+            species: "none",
             growthLevel: plantGrowthLevel.seedling,
           },
         },
       });
     });
 
-    this.player = new Player(this, 80, 80, "player", 0);
+    this.player = new Player(
+      this,
+      this.game.config.width as number / 2,
+      this.game.config.height as number / 2,
+      "player",
+      0,
+    );
     this.initTimeElapsing();
     this.initPopup();
 
@@ -106,25 +123,33 @@ export default class Play extends Phaser.Scene {
       );
       if (tile?.properties.Interactable) {
         this.tileOutline = this.add.image(
-          tile.pixelX + 8,
-          tile.pixelY + 8,
+          (tile.pixelX + 8) * 4,
+          (tile.pixelY + 8) * 4,
           "outline",
-        );
+        ).setScale(4);
       }
     });
 
     dirtLayer?.on("pointerdown", () => {
+      if (!this.UIWindowOpen) return;
       const tile = dirtLayer?.getTileAtWorldXY(
         this.game.input.activePointer!.x,
         this.game.input.activePointer!.y,
       );
       if (tile?.properties.Interactable) {
-        const plant = this.plantableCells.find((e) => e.i === tile.pixelX + 1);
-        const plantData = plant.planterBox;
-        this.writingText.setText(
-          `Water: ${plantData.waterLevel}\nSun: ${plantData.sunLevel}\nSpecies: ${plantData.plant.species}\nGrowth: ${plantData.plant.growthLevel}`,
+        const plantableCell = this.plantableCells.find((cell) =>
+          cell.i === tile.pixelX + 1 && cell.j === tile.pixelY
         );
-        console.log(this.plantableCells.find((e) => e.i === tile.pixelX + 1));
+        if (plantableCell) {
+          this.selectedCell = plantableCell;
+          console.log(this.selectedCell);
+          const plantData = plantableCell.planterBox;
+          this.writingText.setText(
+            `Water: ${
+              plantData.waterLevel.toFixed(3)
+            }\nSun: ${plantData.sunLevel}\nSpecies: ${plantData.plant.species}\nGrowth: ${plantData.plant.growthLevel}`,
+          );
+        }
       }
     });
 
@@ -133,13 +158,10 @@ export default class Play extends Phaser.Scene {
 
       if (tile?.properties.OpenWindow === false && !this.UIWindowOpen) {
         this.UIWindowOpen = true;
-        console.log("open window event");
-        this.events.emit("openWindowEvent");
         this.openWindow();
       } else if (!tile?.properties && this.UIWindowOpen) {
+        this.selectedCell = undefined;
         this.UIWindowOpen = false;
-        this.events.emit("closeWindowEvent");
-        console.log("close window event");
         this.closeWindow();
       }
     });
@@ -151,15 +173,39 @@ export default class Play extends Phaser.Scene {
     this.turnText.setText(this.turnCounter.toString());
   }
 
+  reapCommand() {
+    console.log(this.selectedCell);
+    if (!this.selectedCell) {
+      console.log("no cell selected");
+      return;
+    }
+    if (this.selectedCell.planterBox.plant.species === "none") {
+      console.log("no plant to harvest");
+    }
+  }
+
+  sowCommand() {
+    if (!this.selectedCell) {
+      console.log("no cell selected");
+      return;
+    }
+    if (this.selectedCell.planterBox.plant.species !== "none") {
+      console.log("Already a plant here");
+      return;
+    } else {
+      // pick plant to sow
+      //plant it
+    }
+  }
+
   initTimeElapsing() {
     const { timeStamps } = GAME_CONFIG.TIME;
     this.currentTimeEnum = 0; // in the future this will have to be init from local storage
     this.elapsedTimeText = this.add.text(
       GAME_CONFIG.UI.BORDER_PADDING,
-      GAME_CONFIG.UI.BORDER_PADDING,
+      this.game.config.height as number - GAME_CONFIG.UI.BORDER_PADDING,
       timeStamps[this.currentTimeEnum],
     );
-    // this.setTimeElapsing(this.elapsedTimeToggle)
   }
 
   setTimeElapsing() {
@@ -181,60 +227,61 @@ export default class Play extends Phaser.Scene {
 
   initPopup() {
     this.TEXT_X = this.game.config.width as number / 2; // text w/in dialog box x-position
-    this.TEXT_Y = this.game.config.height as number / 2; // text w/in dialog box y-position
-    this.TEXT_SIZE = 15; // text font size (in pixels)
-    this.TEXT_MAX_WIDTH = 350; // max width of text within box
-    this.writingBox = this.add.sprite(this.TEXT_X, this.TEXT_Y - 80, "dBox")
-      .setOrigin(0.5, 0).setScale(0.38, 0.65).setAlpha(0);
+    this.TEXT_Y = GAME_CONFIG.UI.BORDER_PADDING; // text w/in dialog box y-position
+    this.writingBox = this.add.sprite(this.TEXT_X, this.TEXT_Y, "dBox")
+      .setOrigin(0.5, 0).setAlpha(0).setScale(1.5);
     this.writingText = this.add.text(
-      this.TEXT_X - 75,
-      this.TEXT_Y - 75,
+      this.TEXT_X,
+      this.TEXT_Y + GAME_CONFIG.UI.TEXT_PADDING,
       "Testing",
-    );
-    this.writingText.setScale(.8);
-    this.writingText.setAlpha(0);
+    ).setScale(1.5).setOrigin(0.5).setAlpha(0);
+    this.reapBtn = this.add.sprite(
+      this.TEXT_X - 200,
+      this.TEXT_Y + 75,
+      "player",
+      0,
+    ).setAlpha(0).on("pointerdown", () => this.reapCommand());
+    this.sowBtn = this.add.sprite(
+      this.TEXT_X + 200,
+      this.TEXT_Y + 75,
+      "player",
+      0,
+    ).setAlpha(0).on("pointerdown", () => this.sowCommand());
   }
 
   //USE EVENTS
   openWindow() {
     this.writingText.setText("Select A Plant");
     this.add.tween({
-      targets: this.writingBox,
+      targets: [this.writingBox, this.writingText, this.reapBtn, this.sowBtn],
       alpha: { from: 0, to: 1 },
       delay: 0,
       duration: 500,
-      onComplete: () => this.writingBox.setAlpha(1),
-    });
-    this.add.tween({
-      targets: this.writingText,
-      alpha: { from: 0, to: 1 },
-      delay: 0,
-      duration: 500,
-      onComplete: () => this.writingText.setAlpha(1),
+      onComplete: () => {
+        this.reapBtn.setInteractive();
+        this.sowBtn.setInteractive();
+        this.writingBox.setAlpha(1);
+      },
     });
   }
 
   closeWindow() {
     this.add.tween({
-      targets: this.writingBox,
+      targets: [this.writingBox, this.writingText, this.reapBtn, this.sowBtn],
       alpha: { from: 1, to: 0 },
       delay: 0,
       duration: 500,
-      onComplete: () => this.writingBox.setAlpha(0),
-    });
-    this.add.tween({
-      targets: this.writingText,
-      alpha: { from: 1, to: 0 },
-      delay: 0,
-      duration: 500,
-      onComplete: () => this.writingText.setAlpha(0),
+      onComplete: () => {
+        this.reapBtn.setInteractive(false);
+        this.sowBtn.setInteractive(false);
+        this.writingBox.setAlpha(0);
+      },
     });
   }
 
   advanceTurn() {
     this.turnCounter += 1;
     this.plantableCells.forEach((cell) => {
-      console.log(cell.planterBox); // Access each planterBox
       this.generateSun(cell);
       this.generateWater(cell);
     });
@@ -242,19 +289,19 @@ export default class Play extends Phaser.Scene {
 
   generateSun(currentCell: Cell) {
     currentCell.planterBox.sunLevel = Phaser.Math.Between(0, 5);
-    console.log(
-      `this cell\'s current sun is ${currentCell.planterBox.sunLevel} at ${currentCell.i}, ${currentCell.j}`,
-    );
+    // console.log(
+    //   `this cell\'s current sun is ${currentCell.planterBox.sunLevel} at ${currentCell.i}, ${currentCell.j}`,
+    // );
   }
 
   generateWater(currentCell: Cell) {
     currentCell.planterBox.waterLevel = currentCell.planterBox.waterLevel +
-      Phaser.Math.FloatBetween(0, 3);
+      Number(Phaser.Math.FloatBetween(0, 3).toFixed(3));
     if (currentCell.planterBox.waterLevel >= 5) {
       currentCell.planterBox.waterLevel = 5;
     }
-    console.log(
-      `this cell\'s current water level is ${currentCell.planterBox.waterLevel} at ${currentCell.i}, ${currentCell.j}`,
-    );
+    // console.log(
+    //   `this cell\'s current water level is ${currentCell.planterBox.waterLevel} at ${currentCell.i}, ${currentCell.j}`,
+    // );
   }
 }

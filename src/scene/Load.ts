@@ -28,7 +28,7 @@ export default class Load extends Phaser.Scene {
     this.load.image("dBox", textBox);
 
     this.load.atlas("player", Player, PlayerJson);
-    this.load.image('turnButton', TurnButton);
+    this.load.image("turnButton", TurnButton);
   }
   create() {
     this.anims.create({

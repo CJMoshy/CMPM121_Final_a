@@ -10,7 +10,7 @@ interface PlanterBox {
   plant: Plant;
 }
 
-type PlantSpecies = "something" | "something else" | "A third thing";
+type PlantSpecies = "Flytrap" | "Wheat" | "Aloe Vera" | "none";
 
 interface Plant {
   species: PlantSpecies;
