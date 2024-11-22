@@ -12,6 +12,8 @@ import tilemapJSON from "../../assets/tilemap/FarmTilemap.json" with {
 
 import outline from "../../assets/outline.png";
 
+import textBox from "../../assets/DialogueBox.png";
+
 export default class Load extends Phaser.Scene {
   constructor() {
     super({ key: "loadScene" });
@@ -22,6 +24,7 @@ export default class Load extends Phaser.Scene {
     this.load.image("outline", outline);
     this.load.image("base-tileset", tilemap);
     this.load.tilemapTiledJSON("FarmTilemap", tilemapJSON);
+    this.load.image("dBox", textBox);
 
     this.load.atlas("player", Player, PlayerJson);
   }
