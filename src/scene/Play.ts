@@ -104,7 +104,10 @@ export default class Play extends Phaser.Scene {
       );
       if (tile?.properties.Interactable) {
         const plant = this.plantableCells.find((e) => e.i === tile.pixelX + 1);
-        this.writingText.setText(`Water: ${plant.planterBox.waterLevel}\nSun: ${plant.planterBox.sunLevel}`);
+        const plantData = plant.planterBox;
+        this.writingText.setText(
+          `Water: ${plantData.waterLevel}\nSun: ${plantData.sunLevel}\nSpecies: ${plantData.plant.species}\nGrowth: ${plantData.plant.growthLevel}`
+        );
         console.log(this.plantableCells.find((e) => e.i === tile.pixelX + 1));
       }
     });
@@ -165,13 +168,13 @@ export default class Play extends Phaser.Scene {
 		this.TEXT_SIZE = 15; // text font size (in pixels)
 		this.TEXT_MAX_WIDTH = 350; // max width of text within box
     this.writingBox = this.add.sprite(this.TEXT_X, this.TEXT_Y-80, 'dBox')
-			.setOrigin(0.5, 0).setScale(0.38).setAlpha(0);
+			.setOrigin(0.5, 0).setScale(0.38, 0.65).setAlpha(0);
     this.writingText = this.add.text(
       this.TEXT_X-75,
       this.TEXT_Y-75,
       "Testing"
     );
-    this.writingText.setScale(.9);
+    this.writingText.setScale(.8);
     this.writingText.setAlpha(0);
   }
 
