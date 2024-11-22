@@ -8,17 +8,19 @@ import Play from "./scene/Play.ts";
 const PHASER_CONFIG = {
   type: Phaser.CANVAS,
   parent: "phaser-game",
+  width: 160,
+  height: 160,
   scale: {
     autoCenter: Phaser.Scale.CENTER_BOTH,
-    size: Phaser.Scale.FIT,
   },
   pixelArt: true,
   physics: {
     default: "arcade",
     arcade: {
-      // debug: true,
+      debug: true,
     },
   },
+  zoom: 4,
   scene: [Load, Menu, Credit, Play],
 };
 

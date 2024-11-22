@@ -2,11 +2,10 @@
 
 const GAME_CONFIG = {
   UI: {
-    BORDER_PADDING: 75,
+    BORDER_PADDING: 5,
   },
   TIME: {
-    IN_GAME_HOUR: 5000,
-    ACCEL_IN_GAME_HOUR: 1000, // 500?
+    IN_GAME_HOUR: 200,
     timeStamps: [
       "12:00AM",
       "1:00AM",

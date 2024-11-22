@@ -12,13 +12,9 @@ interface PlanterBox {
 
 type PlantSpecies = "something" | "something else" | "A third thing";
 
-declare enum growthLevel {
-  seedling,
-  sapling,
-  adult,
-}
-
 interface Plant {
   species: PlantSpecies;
   growthLevel: number;
 }
+
+declare module "*png";
