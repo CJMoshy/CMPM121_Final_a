@@ -1,0 +1,11 @@
+{
+  "level": 1,
+  "requirements": {
+    "plants": {
+      "plantA": {
+        "ammount": 1,
+        "growthLevel": 3
+      }
+    }
+  }
+}

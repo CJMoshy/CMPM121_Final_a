@@ -16,5 +16,3 @@ interface Plant {
   species: PlantSpecies;
   growthLevel: number;
 }
-
-declare module "*png";

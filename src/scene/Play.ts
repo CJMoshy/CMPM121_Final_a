@@ -88,7 +88,6 @@ export default class Play extends Phaser.Scene {
         this.game.input.activePointer!.y,
       );
       if (tile?.properties.Interactable) {
-        console.log("make outline", tile.pixelX, tile.pixelY);
         this.tileOutline = this.add.image(
           tile.pixelX + 8,
           tile.pixelY + 8,
