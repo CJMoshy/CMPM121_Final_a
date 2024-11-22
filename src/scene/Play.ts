@@ -22,6 +22,9 @@ export default class Play extends Phaser.Scene {
 
   private tileOutline!: Phaser.GameObjects.Image;
 
+  private turnCounter!: number;
+  private turnText!: Phaser.GameObjects.Text;
+
   constructor() {
     super({ key: "playScene" });
     this.plantableCells = [];
@@ -36,6 +39,8 @@ export default class Play extends Phaser.Scene {
     const map = this.add.tilemap("FarmTilemap");
     const tiles = map.addTilesetImage("FarmTileset", "base-tileset")!;
 
+    this.turnCounter = 0;
+    
     map.createLayer(
       "Ground",
       tiles,
@@ -56,6 +61,15 @@ export default class Play extends Phaser.Scene {
     );
     dirtLayer?.setCollisionByProperty({ Interactable: true });
     map.setCollisionByProperty({ OpenWindow: true });
+
+    const turnButton = this.add.image(140, 140, "turnButton");
+    turnButton.setInteractive();
+    turnButton.on('pointerdown', () => {
+      this.advanceTurn();
+      console.log(`Current turn is ${this.turnCounter}`);
+    });
+
+    this.turnText = this.add.text(140, 4, this.turnCounter.toString(), { fontFamily: 'Serif'}).setFontSize(15);
 
     const iterableDirt = map.getObjectLayer("Plantable")!;
     iterableDirt.objects.forEach((element) => {
@@ -123,6 +137,7 @@ export default class Play extends Phaser.Scene {
   //deno-lint-ignore no-unused-vars
   override update(time: number, delta: number): void {
     this.player.update();
+    this.turnText.setText(this.turnCounter.toString());
   }
 
   initTimeElapsing() {
@@ -151,5 +166,27 @@ export default class Play extends Phaser.Scene {
       repeat: 23,
       delay: GAME_CONFIG.TIME.IN_GAME_HOUR,
     });
+  }
+
+  advanceTurn(){
+    this.turnCounter += 1;
+    this.plantableCells.forEach(cell => {
+      console.log(cell.planterBox); // Access each planterBox
+      this.generateSun(cell);
+      this.generateWater(cell);
+    });
+  }
+
+  generateSun(currentCell: Cell){
+    currentCell.planterBox.sunLevel = Phaser.Math.Between(0, 5);
+    console.log(`this cell\'s current sun is ${currentCell.planterBox.sunLevel} at ${currentCell.i}, ${currentCell.j}`)
+  }
+
+  generateWater(currentCell: Cell){
+    currentCell.planterBox.waterLevel = currentCell.planterBox.waterLevel + Phaser.Math.FloatBetween(0, 3);
+    if(currentCell.planterBox.waterLevel >= 5){
+      currentCell.planterBox.waterLevel = 5;
+    }
+    console.log(`this cell\'s current water level is ${currentCell.planterBox.waterLevel} at ${currentCell.i}, ${currentCell.j}`)
   }
 }
