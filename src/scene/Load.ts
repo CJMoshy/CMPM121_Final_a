@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 
 import Player from "../../assets/player/player.png";
+import TurnButton from "../../assets/turnButton/turnButton.png";
 import PlayerJson from "../../assets/player/player-walk-anims.json" with {
   type: "json",
 };
@@ -24,6 +25,7 @@ export default class Load extends Phaser.Scene {
     this.load.tilemapTiledJSON("FarmTilemap", tilemapJSON);
 
     this.load.atlas("player", Player, PlayerJson);
+    this.load.image('turnButton', TurnButton);
   }
   create() {
     this.anims.create({
