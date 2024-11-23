@@ -41,7 +41,7 @@
       }
     },
     {
-      "name": "Venus Flytrap",
+      "name": "Flytrap",
       "grow": {
         "seedling": {
           "sunlevel": 4,
@@ -49,9 +49,9 @@
           "proximity": 0
         },
         "sapling": {
-          "sunlevel": 6,
-          "waterlevel": 4,
-          "proximity": 1
+          "sunlevel": 3,
+          "waterlevel": 1,
+          "proximity": 0
         },
         "adult": {
           "sunlevel": 8,

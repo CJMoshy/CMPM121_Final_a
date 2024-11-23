@@ -26,6 +26,7 @@ export default class Play extends Phaser.Scene {
   private reapBtn!: Phaser.GameObjects.Sprite;
   private sowBtn!: Phaser.GameObjects.Sprite;
   private selectedCell!: Cell | undefined;
+  private currentLevel!: number;
 
   constructor() {
     super({ key: "playScene" });
@@ -156,6 +157,8 @@ export default class Play extends Phaser.Scene {
         this.closeWindow();
       }
     });
+
+    this.currentLevel = 1;
   }
 
   //deno-lint-ignore no-unused-vars
@@ -317,10 +320,12 @@ export default class Play extends Phaser.Scene {
     this.plantableCells.forEach((cell) => {
       this.generateSun(cell);
       this.generateWater(cell);
+      this.handlePlantGrowth(cell);
     });
     if (this.selectedCell) {
       this.updatePlantInfoUI(this.selectedCell.planterBox);
     }
+    this.handleCompleteLevel();
   }
 
   generateSun(currentCell: Cell) {
@@ -341,12 +346,86 @@ export default class Play extends Phaser.Scene {
     // );
   }
 
-  // handlePlantGrowth(currentCell: Cell) {
-  // }
+  handlePlantGrowth(currentCell: Cell) {
+    if (currentCell.planterBox.plant.species === "none") {
+      return;
+    }
+    const { species } = currentCell.planterBox.plant;
+    let { growthLevel } = currentCell.planterBox.plant;
+    console.log(species, growthLevel, "this is current plant");
+    const query = this.cache.json.get("plantGrowthReq") as PlantsData;
+    const plantRule = query.plants.find((e) => e.name === species);
+    if (!plantRule) {
+      console.log("this should never happen but it did so thats bad");
+      return;
+    }
+    let _required;
+    switch (growthLevel) {
+      case 0:
+        _required = plantRule.grow.seedling;
+        break;
+      case 1:
+        _required = plantRule.grow.sapling;
+        break;
+      case 2:
+        _required = plantRule.grow.adult;
+        break;
+    }
+    if (
+      this.getPlantsNearby() === _required?.proximity &&
+      currentCell.planterBox.sunLevel >= _required.sunlevel &&
+      currentCell.planterBox.waterLevel >= _required.waterlevel
+    ) {
+      growthLevel++;
+      currentCell.planterBox.plant.growthLevel = growthLevel;
+      currentCell.planterBox.sunLevel -= _required.sunlevel;
+      currentCell.planterBox.waterLevel -= _required.waterlevel;
+    }
+  }
 
+  handleCompleteLevel() {
+    const query = this.cache.json.get("scenario") as LevelsData;
+    const levelRequirement = query.levels.find((e) =>
+      e.levelNum === this.currentLevel
+    )?.requirements;
+    if (!levelRequirement) {
+      console.log("wtf this is bad");
+      return;
+    }
+
+    // Convert the plant requirements to an array
+    const plants = Object.entries(levelRequirement.plants); // We use `Object.entries` to get both the plant name and the requirement
+
+    for (const [species, x] of plants) {
+      // Check if there's a planter box that matches the growth level of this plant
+      const hasMatchingGrowthLevel = this.plantableCells.find((e) =>
+        e.planterBox.plant.growthLevel === x.growthLevel
+      );
+
+      if (!hasMatchingGrowthLevel) {
+        console.log("no plant found at correct growth level ");
+        return;
+      }
+
+      // Find the plantable cells that match the species name (e.g., "Flytrap")
+      const matchingCells = this.plantableCells.filter((e) =>
+        e.planterBox.plant.species === species
+      ).length;
+
+      if (matchingCells !== x.ammount) {
+        console.log("not enough plants for level to beat");
+        return;
+      }
+
+      // Now, you can handle the matching cells for the current species (e.g., Flytrap)
+      console.log(
+        `Found ${matchingCells} plantable cells for ${species} with growth level ${x.growthLevel}, LEVEL COMPLETE!`,
+      );
+    }
+  }
   getPlantsNearby(): number {
     return this.plantableCells.filter((e) =>
       e.planterBox.plant.species !== "none"
-    ).length;
+    ).length - 1;
   }
 }
