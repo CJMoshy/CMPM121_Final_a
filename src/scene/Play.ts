@@ -108,6 +108,7 @@ export default class Play extends Phaser.Scene {
       this.game.config.height as number / 2,
       "player",
       0,
+      64
     );
     this.initTimeElapsing();
     this.initPopup();
