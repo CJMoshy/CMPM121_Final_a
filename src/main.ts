@@ -8,8 +8,8 @@ import Play from "./scene/Play.ts";
 const PHASER_CONFIG = {
   type: Phaser.CANVAS,
   parent: "phaser-game",
-  width: 160,
-  height: 160,
+  width: 640,
+  height: 640,
   scale: {
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
@@ -20,7 +20,7 @@ const PHASER_CONFIG = {
       debug: true,
     },
   },
-  zoom: 4,
+  // zoom: 4,
   scene: [Load, Menu, Credit, Play],
 };
 

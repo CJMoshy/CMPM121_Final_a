@@ -1,0 +1,30 @@
+{
+  "levels": [
+    {
+      "levelNum": 1,
+      "requirements": {
+        "plants": {
+          "Flytrap": {
+            "ammount": 1,
+            "growthLevel": 2
+          }
+        }
+      }
+    },
+    {
+      "levelNum": 2,
+      "requirements": {
+        "plants": {
+          "Flytrap": {
+            "ammount": 1,
+            "growthLevel": 3
+          },
+          "Wheat": {
+            "ammount": 1,
+            "growthLevel": 2
+          }
+        }
+      }
+    }
+  ]
+}
