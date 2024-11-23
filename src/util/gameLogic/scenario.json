@@ -1,0 +1,26 @@
+{
+  "levels": [
+    {
+      "levelNum": 1,
+      "requirements": {
+        "plants": {
+          "plantA": {
+            "ammount": 1,
+            "growthLevel": 3
+          }
+        }
+      }
+    },
+    {
+      "levelNum": 2,
+      "requirements": {
+        "plants": {
+          "plantA": {
+            "ammount": 1,
+            "growthLevel": 3
+          }
+        }
+      }
+    }
+  ]
+}

@@ -72,7 +72,7 @@ export default class Play extends Phaser.Scene {
     turnButton.on("pointerdown", () => {
       this.advanceTurn();
       this.setTimeElapsing();
-      // console.log(`Current turn is ${this.turnCounter}`);
+      console.log(`Current turn is ${this.turnCounter}`);
     });
 
     this.turnText = this.add.text(
@@ -86,11 +86,6 @@ export default class Play extends Phaser.Scene {
 
     const iterableDirt = map.getObjectLayer("Plantable")!;
     iterableDirt.objects.forEach((element) => {
-      console.log(
-        "making planterbox",
-        Math.floor(element.x as number),
-        Math.floor(element.y as number),
-      );
       this.plantableCells.push({
         i: Math.floor(element.x as number),
         j: Math.floor(element.y as number),
@@ -100,6 +95,7 @@ export default class Play extends Phaser.Scene {
           plant: {
             species: "none",
             growthLevel: plantGrowthLevel.seedling,
+            sprite: undefined,
           },
         },
       });
@@ -142,13 +138,8 @@ export default class Play extends Phaser.Scene {
         );
         if (plantableCell) {
           this.selectedCell = plantableCell;
-          console.log(this.selectedCell);
           const plantData = plantableCell.planterBox;
-          this.writingText.setText(
-            `Water: ${
-              plantData.waterLevel.toFixed(3)
-            }\nSun: ${plantData.sunLevel}\nSpecies: ${plantData.plant.species}\nGrowth: ${plantData.plant.growthLevel}`,
-          );
+          this.updatePlantInfoUI(plantData);
         }
       }
     });
@@ -173,28 +164,70 @@ export default class Play extends Phaser.Scene {
     this.turnText.setText(this.turnCounter.toString());
   }
 
+  updatePlantInfoUI(plantData: PlanterBox) {
+    this.writingText.setText(
+      `Water: ${
+        plantData.waterLevel.toFixed(3)
+      }\nSun: ${plantData.sunLevel}\nSpecies: ${plantData.plant.species}\nGrowth: ${plantData.plant.growthLevel}`,
+    );
+  }
+
+  /**
+   * command pipeline will be an array of objects, where each object encapsulates both the command and the data associated with the command at that given point
+   * popping from the array to then execute the command is undo
+   * this gets pushed onto the redo stack
+   * poppinf from redo ...
+   *
+   * ex .. .[{function: reapCommand, data:{none...}}]
+   * ex .. .[{function: sowCommand, data:{plantBeingSowed: someplant }}]
+   */
+
   reapCommand() {
-    console.log(this.selectedCell);
     if (!this.selectedCell) {
       console.log("no cell selected");
       return;
     }
-    if (this.selectedCell.planterBox.plant.species === "none") {
+    const { plant } = this.selectedCell.planterBox;
+    if (plant.species === "none") {
       console.log("no plant to harvest");
+      return;
     }
+    console.log(
+      `Reaping plant. species: ${plant.species} growthLevel: ${plant.growthLevel}`,
+    );
+    plant.sprite?.destroy();
+    plant.sprite = undefined;
+    plant.species = "none";
+    this.updatePlantInfoUI(this.selectedCell.planterBox);
   }
 
   sowCommand() {
     if (!this.selectedCell) {
-      console.log("no cell selected");
+      console.log("No cell selected");
       return;
     }
     if (this.selectedCell.planterBox.plant.species !== "none") {
       console.log("Already a plant here");
       return;
+    }
+    const selectedRadio = document.querySelector(
+      'input[name="choice"]:checked',
+    ) as HTMLInputElement;
+    if (selectedRadio) {
+      console.log(
+        `Sowing plant. species: ${selectedRadio.value as PlantSpecies}`,
+      );
+      const { plant } = this.selectedCell.planterBox;
+      plant.sprite = this.add.sprite(
+        (this.selectedCell.i * 4) + 32,
+        (this.selectedCell.j * 4) + 32,
+        "player",
+      );
+      plant.species = selectedRadio
+        .value as PlantSpecies;
+      this.updatePlantInfoUI(this.selectedCell.planterBox);
     } else {
-      // pick plant to sow
-      //plant it
+      console.log("Plant not selected");
     }
   }
 
@@ -285,6 +318,9 @@ export default class Play extends Phaser.Scene {
       this.generateSun(cell);
       this.generateWater(cell);
     });
+    if (this.selectedCell) {
+      this.updatePlantInfoUI(this.selectedCell.planterBox);
+    }
   }
 
   generateSun(currentCell: Cell) {
@@ -303,5 +339,14 @@ export default class Play extends Phaser.Scene {
     // console.log(
     //   `this cell\'s current water level is ${currentCell.planterBox.waterLevel} at ${currentCell.i}, ${currentCell.j}`,
     // );
+  }
+
+  // handlePlantGrowth(currentCell: Cell) {
+  // }
+
+  getPlantsNearby(): number {
+    return this.plantableCells.filter((e) =>
+      e.planterBox.plant.species !== "none"
+    ).length;
   }
 }

@@ -15,4 +15,5 @@ type PlantSpecies = "Flytrap" | "Wheat" | "Aloe Vera" | "none";
 interface Plant {
   species: PlantSpecies;
   growthLevel: number;
+  sprite: Phaser.GameObjects.Sprite | undefined;
 }

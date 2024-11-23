@@ -1,0 +1,64 @@
+{
+  "plants": [
+    {
+      "name": "Wheat",
+      "grow": {
+        "seedling": {
+          "sunlevel": 3,
+          "waterlevel": 2,
+          "proximity": 1
+        },
+        "sapling": {
+          "sunlevel": 5,
+          "waterlevel": 3,
+          "proximity": 3
+        },
+        "adult": {
+          "sunlevel": 7,
+          "waterlevel": 4,
+          "proximity": 5
+        }
+      }
+    },
+    {
+      "name": "Aloe Vera",
+      "grow": {
+        "seedling": {
+          "sunlevel": 2,
+          "waterlevel": 1,
+          "proximity": 0
+        },
+        "sapling": {
+          "sunlevel": 4,
+          "waterlevel": 2,
+          "proximity": 1
+        },
+        "adult": {
+          "sunlevel": 6,
+          "waterlevel": 2,
+          "proximity": 2
+        }
+      }
+    },
+    {
+      "name": "Venus Flytrap",
+      "grow": {
+        "seedling": {
+          "sunlevel": 4,
+          "waterlevel": 3,
+          "proximity": 0
+        },
+        "sapling": {
+          "sunlevel": 6,
+          "waterlevel": 4,
+          "proximity": 1
+        },
+        "adult": {
+          "sunlevel": 8,
+          "waterlevel": 5,
+          "proximity": 2
+        }
+      }
+    }
+  ]
+}
