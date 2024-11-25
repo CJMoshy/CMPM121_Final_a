@@ -35,19 +35,19 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       ?.createCursorKeys() as Phaser.Types.Input.Keyboard.CursorKeys;
 
     this.keys.left.on("down", () => {
-      this.anims.play("player-walk-left");
+      // this.anims.play("player-walk-left");
       this.handleMovement("left");
     });
     this.keys.right.on("down", () => {
-      this.anims.play("player-walk-right");
+      // this.anims.play("player-walk-right");
       this.handleMovement("right");
     });
     this.keys.down.on("down", () => {
-      this.anims.play("player-walk-down");
+      // this.anims.play("player-walk-down");
       this.handleMovement("up");
     });
     this.keys.up.on("down", () => {
-      this.anims.play("player-walk-up");
+      // this.anims.play("player-walk-up");
       this.handleMovement("down");
     });
   }
@@ -68,15 +68,19 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     switch (direction) {
       case "left":
+        this.anims.play("player-walk-left");
         finalPos.x -= TILE_SIZE;
         break;
       case "right":
+        this.anims.play("player-walk-right");
         finalPos.x += TILE_SIZE;
         break;
       case "down":
+        this.anims.play("player-walk-up");
         finalPos.y -= TILE_SIZE;
         break;
       case "up":
+        this.anims.play("player-walk-down");
         finalPos.y += TILE_SIZE;
         break;
     }
