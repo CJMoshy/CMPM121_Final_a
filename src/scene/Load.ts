@@ -2,6 +2,8 @@ import Phaser from "phaser";
 
 import Player from "../../assets/player/player.png";
 import TurnButton from "../../assets/turnButton/turnButton.png";
+import ReapButton from "../../assets/turnButton/reapButton.png";
+import SowButton from "../../assets/turnButton/sowButton.png";
 import PlayerJson from "../../assets/player/player-walk-anims.json" with {
   type: "json",
 };
@@ -35,6 +37,8 @@ export default class Load extends Phaser.Scene {
     this.load.image("dBox", textBox);
     this.load.atlas("player", Player, PlayerJson);
     this.load.image("turnButton", TurnButton);
+    this.load.image("reapButton", ReapButton);
+    this.load.image("sowButton", SowButton);
 
     this.load.json("scenario", scenario);
     this.load.json("plantGrowthReq", plantGrowth);

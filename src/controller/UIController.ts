@@ -50,11 +50,11 @@ export default class UIManager {
       "Select a PlanterBox",
     ).setScale(1.5).setOrigin(0.5).setAlpha(0);
 
-    this.reapBtn = this.scene.add.sprite(TEXT_X - 200, TEXT_Y + 75, "player", 0)
-      .setAlpha(0).on("pointerdown", () => this.reap());
+    this.reapBtn = this.scene.add.sprite(TEXT_X - 200, TEXT_Y + 75, "reapButton", 0)
+      .setAlpha(0).setScale(3).on("pointerdown", () => this.reap());
 
-    this.sowBtn = this.scene.add.sprite(TEXT_X + 200, TEXT_Y + 75, "player", 0)
-      .setAlpha(0).on("pointerdown", () => this.sow());
+    this.sowBtn = this.scene.add.sprite(TEXT_X + 200, TEXT_Y + 75, "sowButton", 0)
+      .setAlpha(0).setScale(3).on("pointerdown", () => this.sow());
   }
 
   setTurnText(turnCounter: string) {
