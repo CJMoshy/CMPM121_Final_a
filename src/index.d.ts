@@ -54,3 +54,9 @@ interface Level {
 interface LevelsData {
   levels: Level[];
 }
+
+interface GameState{
+  currentLevel: number,
+  currentTurn: number,
+  plantData: Cell[] // will become array buffer
+}

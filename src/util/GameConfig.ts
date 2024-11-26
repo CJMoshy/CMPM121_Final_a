@@ -36,4 +36,10 @@ const GAME_CONFIG = {
   },
 };
 
+export const enum plantGrowthLevel {
+  seedling,
+  sapling,
+  adult,
+}
+
 export default GAME_CONFIG;

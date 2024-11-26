@@ -14,7 +14,7 @@
           "proximity": 3
         },
         "adult": {
-          "sunlevel": 7,
+          "sunlevel": 5,
           "waterlevel": 4,
           "proximity": 5
         }
@@ -34,7 +34,7 @@
           "proximity": 1
         },
         "adult": {
-          "sunlevel": 6,
+          "sunlevel": 5,
           "waterlevel": 2,
           "proximity": 2
         }
@@ -54,7 +54,7 @@
           "proximity": 0
         },
         "adult": {
-          "sunlevel": 8,
+          "sunlevel": 5,
           "waterlevel": 5,
           "proximity": 2
         }

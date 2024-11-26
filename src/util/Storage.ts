@@ -15,7 +15,16 @@ export function deSerializeObj(arg: string) {
 
 // TODO...
 
-// export function saveGameState() {
-// }
-// export function loadGameState() {
-// }
+export function saveGameState(state: GameState, slot: number) {
+  const HASH = `gameState_${slot}`
+  localStorage.setItem(HASH, JSON.stringify(state));
+}
+export function loadGameState(slot: number): [number, number, Cell[] | []] {
+  const gameState = localStorage.getItem(`gameState_${slot}`);
+  if (!gameState) {
+    console.log("no game state saved");
+    return [0, 0, []]
+  }
+  const parsed: GameState = JSON.parse(gameState)
+  return [parsed.currentLevel, parsed.currentTurn, parsed.plantData]
+}
