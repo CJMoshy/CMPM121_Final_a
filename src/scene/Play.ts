@@ -74,17 +74,6 @@ export default class Play extends Phaser.Scene {
       });
     });
 
-    this.player = new Player(
-      this,
-      this.game.config.width as number / 2,
-      this.game.config.height as number / 2,
-      "player",
-      0,
-      64,
-    );
-    this.initTimeElapsing();
-    this.initPopup();
-
     dirtLayer?.setInteractive().on("pointermove", () => {
       this.tileOutline?.destroy();
       const tile = dirtLayer?.getTileAtWorldXY(

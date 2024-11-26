@@ -40,6 +40,7 @@ export default class GameManager {
     this.TimeManager.initTimeElapsing();
     this.UIManager.initUI();
     this.loadSavedGame();
+    this.UIManager.setTurnText(this.turnCounter.toString());
   }
 
   saveGame() {
