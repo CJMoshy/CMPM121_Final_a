@@ -9,11 +9,11 @@ export default class GameManager {
   private UIManager: UIManager;
   private TimeManager: TimeManager;
   public selectedCell!: Cell | undefined;
+  public selectedCellIndex: number = 0;
   private currentLevel!: number;
-
   public turnCounter!: number;
-
   private savedGameSlot: number;
+
   constructor(
     scene: Phaser.Scene,
     plantManager: PlantManager,
@@ -30,6 +30,7 @@ export default class GameManager {
   getSavedGameSlot() {
     return this.savedGameSlot;
   }
+  
   setSavedGameSlot(slot: number) {
     this.savedGameSlot = slot;
   }
@@ -44,31 +45,49 @@ export default class GameManager {
   }
 
   saveGame() {
+    const toByteArr = new Uint8Array(
+      this.plantManager.getPlantableCellBuffer(),
+    );
     saveGameState({
       currentLevel: this.currentLevel,
       currentTurn: this.turnCounter,
-      plantData: this.plantManager.getCells(),
+      plantData: Array.from(toByteArr),
     }, this.savedGameSlot); // for now only save is in slot 1
   }
 
   loadSavedGame() {
-    let plantData: Cell[];
-    [this.currentLevel, this.turnCounter, plantData] = loadGameState(
-      this.savedGameSlot,
-    );
-    plantData.forEach((e) => this.plantManager.addPlantableCell(e));
+    if (!loadGameState(this.savedGameSlot)) {
+      this.scene.events.emit("newGameEvent");
+      this.turnCounter = 1;
+      this.currentLevel = 1;
+    } else {
+      let plantData: ArrayBuffer;
+      [this.currentLevel, this.turnCounter, plantData] = loadGameState(
+        this.savedGameSlot,
+      ) as [number, number, ArrayBuffer];
+      this.plantManager.setPlantableCellBuffer(plantData);
+    }
   }
 
   advanceTurn() {
     this.turnCounter += 1;
-    this.plantManager.getCells().forEach((cell) => {
+    const asCells = this.plantManager.getAllPlantableCells();
+    let count = 0;
+    asCells.forEach((cell) => {
       this.generateSun(cell);
       this.generateWater(cell);
       this.plantManager.updatePlantGrowth(cell);
+      this.plantManager.addPlantableCell(count, cell);
+      count += 1;
     });
+
     if (this.selectedCell) {
-      this.UIManager.updatePlantInfoUI(this.selectedCell.planterBox);
+      this.UIManager.updatePlantInfoUI(
+        this.plantManager.getAllPlantableCells()[this.selectedCellIndex]
+          .planterBox,
+      );
     }
+
     this.handleCompleteLevel();
     this.UIManager.setTurnText(this.turnCounter.toString());
 
@@ -103,9 +122,8 @@ export default class GameManager {
 
     for (const [species, x] of plants) {
       // Check if there's a planter box that matches the growth level of this plant
-      const hasMatchingGrowthLevel = this.plantManager.getCells().find((e) =>
-        e.planterBox.plant.growthLevel === x.growthLevel
-      );
+      const hasMatchingGrowthLevel = this.plantManager.getAllPlantableCells()
+        .find((e) => e.planterBox.plant.growthLevel === x.growthLevel);
 
       if (!hasMatchingGrowthLevel) {
         console.log("no plant found at correct growth level ");
@@ -113,9 +131,10 @@ export default class GameManager {
       }
 
       // Find the plantable cells that match the species name (e.g., "Flytrap")
-      const matchingCells = this.plantManager.getCells().filter((e) =>
-        e.planterBox.plant.species === species
-      ).length;
+      const matchingCells =
+        this.plantManager.getAllPlantableCells().filter((e) =>
+          e.planterBox.plant.species === species
+        ).length;
 
       if (matchingCells !== x.ammount) {
         console.log("not enough plants for level to beat");

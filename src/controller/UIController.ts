@@ -58,7 +58,6 @@ export default class UIManager {
   }
 
   setTurnText(turnCounter: string) {
-    console.log(turnCounter)
     this.turnText.setText(turnCounter);
   }
 

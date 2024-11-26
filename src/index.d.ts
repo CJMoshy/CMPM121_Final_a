@@ -15,7 +15,7 @@ type PlantSpecies = "Flytrap" | "Wheat" | "Aloe Vera" | "none";
 interface Plant {
   species: PlantSpecies;
   growthLevel: number;
-  sprite: Phaser.GameObjects.Sprite | undefined;
+  // sprite: Phaser.GameObjects.Sprite | undefined;
 }
 
 interface GrowthStage {
@@ -58,5 +58,5 @@ interface LevelsData {
 interface GameState {
   currentLevel: number;
   currentTurn: number;
-  plantData: Cell[]; // will become array buffer
+  plantData: Array<number>; // will become array buffer
 }

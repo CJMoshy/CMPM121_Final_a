@@ -57,23 +57,6 @@ export default class Play extends Phaser.Scene {
     dirtLayer?.setCollisionByProperty({ Interactable: true });
     map.setCollisionByProperty({ OpenWindow: true });
 
-    const iterableDirt = map.getObjectLayer("Plantable")!;
-    iterableDirt.objects.forEach((element) => {
-      this.plantManager.addPlantableCell({
-        i: Math.floor(element.x as number),
-        j: Math.floor(element.y as number),
-        planterBox: {
-          waterLevel: 0,
-          sunLevel: 0,
-          plant: {
-            species: "none",
-            growthLevel: plantGrowthLevel.seedling,
-            sprite: undefined,
-          },
-        },
-      });
-    });
-
     dirtLayer?.setInteractive().on("pointermove", () => {
       this.tileOutline?.destroy();
       const tile = dirtLayer?.getTileAtWorldXY(
@@ -96,15 +79,40 @@ export default class Play extends Phaser.Scene {
         this.game.input.activePointer!.y,
       );
       if (tile?.properties.Interactable) {
-        const plantableCell = this.plantManager.getCells().find((cell) =>
-          cell.i === tile.pixelX + 1 && cell.j === tile.pixelY
-        );
+        const plantableCell = this.plantManager.getAllPlantableCells().find((
+          cell,
+        ) => cell.i === tile.pixelX + 1 && cell.j === tile.pixelY);
+        const plantableCellIndex = this.plantManager.getAllPlantableCells()
+          .findIndex((
+            cell,
+          ) => cell.i === tile.pixelX + 1 && cell.j === tile.pixelY);
         if (plantableCell) {
           this.gameManager.selectedCell = plantableCell;
+          this.gameManager.selectedCellIndex = plantableCellIndex;
           const plantData = plantableCell.planterBox;
           this.UIManager.updatePlantInfoUI(plantData);
         }
       }
+    });
+
+    this.events.on("newGameEvent", () => {
+      const iterableDirt = map.getObjectLayer("Plantable")!;
+      let count = 0;
+      iterableDirt.objects.forEach((element) => {
+        this.plantManager.addPlantableCell(count, {
+          i: Math.floor(element.x as number),
+          j: Math.floor(element.y as number),
+          planterBox: {
+            waterLevel: 0,
+            sunLevel: 0,
+            plant: {
+              species: "none",
+              growthLevel: plantGrowthLevel.seedling,
+            },
+          },
+        });
+        count += 1;
+      });
     });
 
     this.player = new Player(
@@ -162,8 +170,8 @@ export default class Play extends Phaser.Scene {
     console.log(
       `Reaping plant. species: ${plant.species} growthLevel: ${plant.growthLevel}`,
     );
-    plant.sprite?.destroy();
-    plant.sprite = undefined;
+    // plant.sprite?.destroy();
+    // plant.sprite = undefined;
     plant.species = "none";
     plant.growthLevel = 0;
     this.UIManager.updatePlantInfoUI(this.gameManager.selectedCell.planterBox);
@@ -186,13 +194,17 @@ export default class Play extends Phaser.Scene {
         `Sowing plant. species: ${selectedRadio.value as PlantSpecies}`,
       );
       const { plant } = this.gameManager.selectedCell.planterBox;
-      plant.sprite = this.add.sprite(
-        (this.gameManager.selectedCell.i * 4) + 32,
-        (this.gameManager.selectedCell.j * 4) + 32,
-        "player",
-      );
+      // plant.sprite = this.add.sprite(
+      //   (this.gameManager.selectedCell.i * 4) + 32,
+      //   (this.gameManager.selectedCell.j * 4) + 32,
+      //   "player",
+      // );
       plant.species = selectedRadio
         .value as PlantSpecies;
+      this.plantManager.addPlantableCell(
+        this.gameManager.selectedCellIndex,
+        this.gameManager.selectedCell,
+      );
       this.UIManager.updatePlantInfoUI(
         this.gameManager.selectedCell.planterBox,
       );
