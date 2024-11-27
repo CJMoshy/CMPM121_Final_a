@@ -58,31 +58,39 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.isMoving) {
       return;
     }
-
-    const vector = new Phaser.Math.Vector2(0, 0);
     this.isMoving = true;
+
+    const finalPos = {
+      x: this.x,
+      y: this.y,
+    };
+    const TILE_SIZE = 64;
+
     switch (direction) {
       case "left":
-        vector.x = -1;
+        finalPos.x -= TILE_SIZE;
         break;
       case "right":
-        vector.x = 1;
+        finalPos.x += TILE_SIZE;
         break;
       case "down":
-        vector.y = -1;
+        finalPos.y -= TILE_SIZE;
         break;
       case "up":
-        vector.y = 1;
+        finalPos.y += TILE_SIZE;
         break;
     }
 
-    vector.normalize();
-    this.setVelocity(this.velocity * vector.x, this.velocity * vector.y);
-
-    this.parentScene.time.delayedCall(500, () => {
-      this.setVelocity(0);
-      this.anims.stop();
-      this.isMoving = false;
+    this.parentScene.add.tween({
+      targets: this,
+      x: finalPos.x,
+      y: finalPos.y,
+      duration: 750,
+      onComplete: () => {
+        this.setPosition(finalPos.x, finalPos.y);
+        this.isMoving = false;
+        this.anims.stop();
+      },
     });
   }
 }

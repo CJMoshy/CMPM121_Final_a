@@ -34,6 +34,16 @@ const GAME_CONFIG = {
       "11:00PM",
     ],
   },
-};
+  STORAGE: {
+    CELL_SIZE_IN_BYTES: 24,
+    CELLS_IN_GRID: 8,
+  },
+} as const;
+
+export const enum plantGrowthLevel {
+  seedling,
+  sapling,
+  adult,
+}
 
 export default GAME_CONFIG;

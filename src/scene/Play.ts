@@ -1,47 +1,54 @@
 import Phaser from "phaser";
-import GAME_CONFIG from "../util/GameConfig.ts";
+import { plantGrowthLevel } from "../util/GameConfig.ts";
 import Player from "../prefab/Player.ts";
-
-// come back to this
-enum plantGrowthLevel {
-  seedling,
-  sapling,
-  adult,
-}
+import PlantManager from "../controller/PlantController.ts";
+import UIManager from "../controller/UIController.ts";
+import TimeManager from "../controller/TimeController.ts";
+import GameManager from "../controller/GameManager.ts";
+import CommandPipeline from "../controller/CommandPipeline.ts";
 
 export default class Play extends Phaser.Scene {
-  private elapsedTimeText!: Phaser.GameObjects.Text;
-  private elapsedTimeEvent!: Phaser.Time.TimerEvent;
-  private currentTimeEnum!: number;
   private player!: Player;
-  private plantableCells!: Cell[];
   private UIWindowOpen!: boolean;
   private tileOutline!: Phaser.GameObjects.Image;
-  private turnCounter!: number;
-  private turnText!: Phaser.GameObjects.Text;
-  private writingText!: Phaser.GameObjects.Text;
-  private writingBox!: Phaser.GameObjects.Sprite;
-  private TEXT_X!: number;
-  private TEXT_Y!: number;
-  private reapBtn!: Phaser.GameObjects.Sprite;
-  private sowBtn!: Phaser.GameObjects.Sprite;
-  private selectedCell!: Cell | undefined;
-  private currentLevel!: number;
+
+  private plantManager: PlantManager;
+  private UIManager: UIManager;
+  private TimeManager: TimeManager;
+  private gameManager: GameManager;
+  private commandPipeline: CommandPipeline;
 
   constructor() {
     super({ key: "playScene" });
-    this.plantableCells = [];
+
     this.UIWindowOpen = false;
-    this.selectedCell = undefined;
+    this.plantManager = new PlantManager(this);
+    this.UIManager = new UIManager(this);
+    this.TimeManager = new TimeManager(this);
+    this.gameManager = new GameManager(
+      this,
+      this.plantManager,
+      this.UIManager,
+      this.TimeManager,
+    );
+    this.commandPipeline = new CommandPipeline();
+
+    document.getElementById("undoBtn")?.addEventListener(
+      "click",
+      () => this.commandPipeline.undo(),
+    );
+    document.getElementById("redoBtn")?.addEventListener(
+      "click",
+      () => this.commandPipeline.redo(),
+    );
   }
 
   init() {}
   preload() {}
   create() {
+    // TILESET LOGIC
     const map = this.add.tilemap("FarmTilemap");
     const tiles = map.addTilesetImage("FarmTileset", "base-tileset")!;
-
-    this.turnCounter = 0;
 
     map.createLayer(
       "Ground",
@@ -60,60 +67,11 @@ export default class Play extends Phaser.Scene {
       tiles,
       0,
       0,
-    )?.setScale(4);
+    )?.setScale(4).setInteractive();
     dirtLayer?.setCollisionByProperty({ Interactable: true });
     map.setCollisionByProperty({ OpenWindow: true });
 
-    const turnButton = this.add.image(
-      this.game.config.width as number - GAME_CONFIG.UI.BORDER_PADDING,
-      this.game.config.height as number - GAME_CONFIG.UI.BORDER_PADDING * 2.5,
-      "turnButton",
-    );
-    turnButton.setInteractive().setScale(3);
-    turnButton.on("pointerdown", () => {
-      this.advanceTurn();
-      this.setTimeElapsing();
-      console.log(`Current turn is ${this.turnCounter}`);
-    });
-
-    this.turnText = this.add.text(
-      this.game.config.width as number - GAME_CONFIG.UI.BORDER_PADDING,
-      this.game.config.height as number - GAME_CONFIG.UI.BORDER_PADDING,
-      this.turnCounter.toString(),
-      {
-        fontFamily: "Serif",
-      },
-    ).setFontSize(15);
-
-    const iterableDirt = map.getObjectLayer("Plantable")!;
-    iterableDirt.objects.forEach((element) => {
-      this.plantableCells.push({
-        i: Math.floor(element.x as number),
-        j: Math.floor(element.y as number),
-        planterBox: {
-          waterLevel: 0,
-          sunLevel: 0,
-          plant: {
-            species: "none",
-            growthLevel: plantGrowthLevel.seedling,
-            sprite: undefined,
-          },
-        },
-      });
-    });
-
-    this.player = new Player(
-      this,
-      this.game.config.width as number / 2,
-      this.game.config.height as number / 2,
-      "player",
-      0,
-      64
-    );
-    this.initTimeElapsing();
-    this.initPopup();
-
-    dirtLayer?.setInteractive().on("pointermove", () => {
+    dirtLayer?.on("pointermove", () => {
       this.tileOutline?.destroy();
       const tile = dirtLayer?.getTileAtWorldXY(
         this.game.input.activePointer!.x,
@@ -135,63 +93,107 @@ export default class Play extends Phaser.Scene {
         this.game.input.activePointer!.y,
       );
       if (tile?.properties.Interactable) {
-        const plantableCell = this.plantableCells.find((cell) =>
-          cell.i === tile.pixelX + 1 && cell.j === tile.pixelY
-        );
+        const plantableCell = this.plantManager.getAllPlantableCells().find((
+          cell,
+        ) => cell.i === tile.pixelX + 1 && cell.j === tile.pixelY);
+        const plantableCellIndex = this.plantManager.getAllPlantableCells()
+          .findIndex((
+            cell,
+          ) => cell.i === tile.pixelX + 1 && cell.j === tile.pixelY);
         if (plantableCell) {
-          this.selectedCell = plantableCell;
+          this.gameManager.selectedCell = plantableCell;
+          this.gameManager.selectedCellIndex = plantableCellIndex;
           const plantData = plantableCell.planterBox;
-          this.updatePlantInfoUI(plantData);
+          this.UIManager.updatePlantInfoUI(plantData);
         }
       }
     });
+
+    // TODO FIX
+    // whenever the game state moves forward we want to save the previous board state so we can undo
+    this.events.on("gameStateAdvance", (arg: Cell[]) => {
+      this.commandPipeline.addCommand({
+        executeUndo: () => {
+          let count = 0;
+          for (const cell of arg) {
+            console.log(cell);
+            this.plantManager.addPlantableCell(count, cell);
+            count += 1;
+          }
+          // something something turn counter decrement
+          // something something reverse time ? lol
+          if (this.gameManager.selectedCell) {
+            this.UIManager.updatePlantInfoUI(
+              this.gameManager.selectedCell.planterBox,
+            );
+          }
+        },
+        executeRedo: () => {
+          this.events.emit("newTurnEvent"); // TODO this is busted
+        },
+      });
+    });
+
+    // if a new game exists then we need to go through all the cells and set them up
+    this.events.on("newGameEvent", () => {
+      const iterableDirt = map.getObjectLayer("Plantable")!;
+      let count = 0;
+      iterableDirt.objects.forEach((element) => {
+        this.plantManager.addPlantableCell(count, {
+          i: Math.floor(element.x as number),
+          j: Math.floor(element.y as number),
+          planterBox: {
+            waterLevel: 0,
+            sunLevel: 0,
+            plant: {
+              species: "none",
+              growthLevel: plantGrowthLevel.seedling,
+            },
+          },
+        });
+        count += 1;
+      });
+    });
+
+    this.player = new Player(
+      this,
+      this.game.config.width as number / 2,
+      this.game.config.height as number / 2,
+      "player",
+      0,
+      64,
+    );
+    this.gameManager.initGame();
 
     this.physics.add.overlap(this.player, dirtLayer!, () => {
       const tile = dirtLayer?.getTileAtWorldXY(this.player.x, this.player.y);
 
       if (tile?.properties.OpenWindow === false && !this.UIWindowOpen) {
         this.UIWindowOpen = true;
-        this.openWindow();
+        this.UIManager.openWindow();
       } else if (!tile?.properties && this.UIWindowOpen) {
-        this.selectedCell = undefined;
+        this.gameManager.selectedCell = undefined;
         this.UIWindowOpen = false;
-        this.closeWindow();
+        this.UIManager.closeWindow();
       }
     });
 
-    this.currentLevel = 1;
+    this.events.on("reapEvent", () => this.reap());
+    this.events.on("sowEvent", () => this.sow());
   }
 
   //deno-lint-ignore no-unused-vars
   override update(time: number, delta: number): void {
     this.player.update();
-    this.turnText.setText(this.turnCounter.toString());
   }
 
-  updatePlantInfoUI(plantData: PlanterBox) {
-    this.writingText.setText(
-      `Water: ${
-        plantData.waterLevel.toFixed(3)
-      }\nSun: ${plantData.sunLevel}\nSpecies: ${plantData.plant.species}\nGrowth: ${plantData.plant.growthLevel}`,
-    );
-  }
-
-  /**
-   * command pipeline will be an array of objects, where each object encapsulates both the command and the data associated with the command at that given point
-   * popping from the array to then execute the command is undo
-   * this gets pushed onto the redo stack
-   * poppinf from redo ...
-   *
-   * ex .. .[{function: reapCommand, data:{none...}}]
-   * ex .. .[{function: sowCommand, data:{plantBeingSowed: someplant }}]
-   */
-
-  reapCommand() {
-    if (!this.selectedCell) {
+  // reap method encapsulates everything it needs to reap or sow in a closure which is passed to command pipeline as undo/redo
+  reap() {
+    if (!this.gameManager.selectedCell) {
       console.log("no cell selected");
       return;
     }
-    const { plant } = this.selectedCell.planterBox;
+    const { plant } = this.gameManager.selectedCell.planterBox;
     if (plant.species === "none") {
       console.log("no plant to harvest");
       return;
@@ -199,18 +201,51 @@ export default class Play extends Phaser.Scene {
     console.log(
       `Reaping plant. species: ${plant.species} growthLevel: ${plant.growthLevel}`,
     );
-    plant.sprite?.destroy();
-    plant.sprite = undefined;
-    plant.species = "none";
-    this.updatePlantInfoUI(this.selectedCell.planterBox);
+
+    // this is key we need alias of stuff so when they change we can remember the old things
+    const selectedCellAlias = this.gameManager.selectedCell; // this works but we might need to deep copy
+    const selectedCellIndexAlias = this.gameManager.selectedCellIndex; // this works but we might need to deep copy
+    const plantAlias = JSON.parse(JSON.stringify(plant)); // deep copy here to ensure old plant stays the same?
+
+    // heres the closure
+    const preformReap = () => {
+      plant.species = "none"; // this is everything associated with reaping
+      plant.growthLevel = 0; // this is everything associated with reaping
+      this.plantManager.addPlantableCell( // this is everything associated with reaping
+        selectedCellIndexAlias,
+        selectedCellAlias,
+      );
+      this.UIManager.updatePlantInfoUI( // this is everything associated with reaping
+        selectedCellAlias.planterBox,
+      );
+    };
+    preformReap(); // reap it
+
+    this.commandPipeline.addCommand({
+      executeUndo: () => { // this is the opposite of reaping. its not sowing because in the future if we tie more logic into sow we could be potentially losing seeds etc...
+        plant.species = plantAlias.species;
+        plant.growthLevel = plantAlias.growthLevel;
+        this.plantManager.addPlantableCell(
+          selectedCellIndexAlias,
+          selectedCellAlias,
+        );
+        this.UIManager.updatePlantInfoUI(
+          selectedCellAlias.planterBox,
+        );
+      },
+      executeRedo: () => {
+        preformReap(); // the undo is just the reap again
+      },
+    });
   }
 
-  sowCommand() {
-    if (!this.selectedCell) {
+  // same idea as above
+  sow() {
+    if (!this.gameManager.selectedCell) {
       console.log("No cell selected");
       return;
     }
-    if (this.selectedCell.planterBox.plant.species !== "none") {
+    if (this.gameManager.selectedCell.planterBox.plant.species !== "none") {
       console.log("Already a plant here");
       return;
     }
@@ -221,212 +256,44 @@ export default class Play extends Phaser.Scene {
       console.log(
         `Sowing plant. species: ${selectedRadio.value as PlantSpecies}`,
       );
-      const { plant } = this.selectedCell.planterBox;
-      plant.sprite = this.add.sprite(
-        (this.selectedCell.i * 4) + 32,
-        (this.selectedCell.j * 4) + 32,
-        "player",
-      );
-      plant.species = selectedRadio
-        .value as PlantSpecies;
-      this.updatePlantInfoUI(this.selectedCell.planterBox);
+
+      // same alias thing
+      const { plant } = this.gameManager.selectedCell.planterBox;
+      const selectedCellAlias = this.gameManager.selectedCell;
+      const selectedCellIndexAlias = this.gameManager.selectedCellIndex;
+
+      // heres the closure (command)
+      const preformSow = () => {
+        plant.species = selectedRadio
+          .value as PlantSpecies;
+        this.plantManager.addPlantableCell(
+          selectedCellIndexAlias,
+          selectedCellAlias,
+        );
+        this.UIManager.updatePlantInfoUI(
+          selectedCellAlias!.planterBox,
+        );
+      };
+      preformSow(); // run it
+
+      this.commandPipeline.addCommand({
+        executeUndo: () => { // opposite / undo
+          plant.species = "none";
+          plant.growthLevel = 0;
+          this.plantManager.addPlantableCell(
+            selectedCellIndexAlias,
+            selectedCellAlias,
+          );
+          this.UIManager.updatePlantInfoUI(
+            selectedCellAlias.planterBox,
+          );
+        },
+        executeRedo: () => {
+          preformSow(); // sow it again
+        },
+      });
     } else {
       console.log("Plant not selected");
     }
-  }
-
-  initTimeElapsing() {
-    const { timeStamps } = GAME_CONFIG.TIME;
-    this.currentTimeEnum = 0; // in the future this will have to be init from local storage
-    this.elapsedTimeText = this.add.text(
-      GAME_CONFIG.UI.BORDER_PADDING,
-      this.game.config.height as number - GAME_CONFIG.UI.BORDER_PADDING,
-      timeStamps[this.currentTimeEnum],
-    );
-  }
-
-  setTimeElapsing() {
-    this.time.removeEvent(this.elapsedTimeEvent);
-    this.elapsedTimeEvent = this.time.addEvent({
-      callback: () => {
-        const { timeStamps } = GAME_CONFIG.TIME;
-        if (this.currentTimeEnum === timeStamps.length - 1) {
-          this.currentTimeEnum = 0;
-        } else this.currentTimeEnum++;
-        this.elapsedTimeText.setText(
-          timeStamps[this.currentTimeEnum],
-        );
-      },
-      repeat: 23,
-      delay: GAME_CONFIG.TIME.IN_GAME_HOUR,
-    });
-  }
-
-  initPopup() {
-    this.TEXT_X = this.game.config.width as number / 2; // text w/in dialog box x-position
-    this.TEXT_Y = GAME_CONFIG.UI.BORDER_PADDING; // text w/in dialog box y-position
-    this.writingBox = this.add.sprite(this.TEXT_X, this.TEXT_Y, "dBox")
-      .setOrigin(0.5, 0).setAlpha(0).setScale(1.5);
-    this.writingText = this.add.text(
-      this.TEXT_X,
-      this.TEXT_Y + GAME_CONFIG.UI.TEXT_PADDING,
-      "Testing",
-    ).setScale(1.5).setOrigin(0.5).setAlpha(0);
-    this.reapBtn = this.add.sprite(
-      this.TEXT_X - 200,
-      this.TEXT_Y + 75,
-      "player",
-      0,
-    ).setAlpha(0).on("pointerdown", () => this.reapCommand());
-    this.sowBtn = this.add.sprite(
-      this.TEXT_X + 200,
-      this.TEXT_Y + 75,
-      "player",
-      0,
-    ).setAlpha(0).on("pointerdown", () => this.sowCommand());
-  }
-
-  //USE EVENTS
-  openWindow() {
-    this.writingText.setText("Select A Plant");
-    this.add.tween({
-      targets: [this.writingBox, this.writingText, this.reapBtn, this.sowBtn],
-      alpha: { from: 0, to: 1 },
-      delay: 0,
-      duration: 500,
-      onComplete: () => {
-        this.reapBtn.setInteractive();
-        this.sowBtn.setInteractive();
-        this.writingBox.setAlpha(1);
-      },
-    });
-  }
-
-  closeWindow() {
-    this.add.tween({
-      targets: [this.writingBox, this.writingText, this.reapBtn, this.sowBtn],
-      alpha: { from: 1, to: 0 },
-      delay: 0,
-      duration: 500,
-      onComplete: () => {
-        this.reapBtn.setInteractive(false);
-        this.sowBtn.setInteractive(false);
-        this.writingBox.setAlpha(0);
-      },
-    });
-  }
-
-  advanceTurn() {
-    this.turnCounter += 1;
-    this.plantableCells.forEach((cell) => {
-      this.generateSun(cell);
-      this.generateWater(cell);
-      this.handlePlantGrowth(cell);
-    });
-    if (this.selectedCell) {
-      this.updatePlantInfoUI(this.selectedCell.planterBox);
-    }
-    this.handleCompleteLevel();
-  }
-
-  generateSun(currentCell: Cell) {
-    currentCell.planterBox.sunLevel = Phaser.Math.Between(0, 5);
-    // console.log(
-    //   `this cell\'s current sun is ${currentCell.planterBox.sunLevel} at ${currentCell.i}, ${currentCell.j}`,
-    // );
-  }
-
-  generateWater(currentCell: Cell) {
-    currentCell.planterBox.waterLevel = currentCell.planterBox.waterLevel +
-      Number(Phaser.Math.FloatBetween(0, 3).toFixed(3));
-    if (currentCell.planterBox.waterLevel >= 5) {
-      currentCell.planterBox.waterLevel = 5;
-    }
-    // console.log(
-    //   `this cell\'s current water level is ${currentCell.planterBox.waterLevel} at ${currentCell.i}, ${currentCell.j}`,
-    // );
-  }
-
-  handlePlantGrowth(currentCell: Cell) {
-    if (currentCell.planterBox.plant.species === "none") {
-      return;
-    }
-    const { species } = currentCell.planterBox.plant;
-    let { growthLevel } = currentCell.planterBox.plant;
-    console.log(species, growthLevel, "this is current plant");
-    const query = this.cache.json.get("plantGrowthReq") as PlantsData;
-    const plantRule = query.plants.find((e) => e.name === species);
-    if (!plantRule) {
-      console.log("this should never happen but it did so thats bad");
-      return;
-    }
-    let _required;
-    switch (growthLevel) {
-      case 0:
-        _required = plantRule.grow.seedling;
-        break;
-      case 1:
-        _required = plantRule.grow.sapling;
-        break;
-      case 2:
-        _required = plantRule.grow.adult;
-        break;
-    }
-    if (
-      this.getPlantsNearby() === _required?.proximity &&
-      currentCell.planterBox.sunLevel >= _required.sunlevel &&
-      currentCell.planterBox.waterLevel >= _required.waterlevel
-    ) {
-      growthLevel++;
-      currentCell.planterBox.plant.growthLevel = growthLevel;
-      currentCell.planterBox.sunLevel -= _required.sunlevel;
-      currentCell.planterBox.waterLevel -= _required.waterlevel;
-    }
-  }
-
-  handleCompleteLevel() {
-    const query = this.cache.json.get("scenario") as LevelsData;
-    const levelRequirement = query.levels.find((e) =>
-      e.levelNum === this.currentLevel
-    )?.requirements;
-    if (!levelRequirement) {
-      console.log("wtf this is bad");
-      return;
-    }
-
-    // Convert the plant requirements to an array
-    const plants = Object.entries(levelRequirement.plants); // We use `Object.entries` to get both the plant name and the requirement
-
-    for (const [species, x] of plants) {
-      // Check if there's a planter box that matches the growth level of this plant
-      const hasMatchingGrowthLevel = this.plantableCells.find((e) =>
-        e.planterBox.plant.growthLevel === x.growthLevel
-      );
-
-      if (!hasMatchingGrowthLevel) {
-        console.log("no plant found at correct growth level ");
-        return;
-      }
-
-      // Find the plantable cells that match the species name (e.g., "Flytrap")
-      const matchingCells = this.plantableCells.filter((e) =>
-        e.planterBox.plant.species === species
-      ).length;
-
-      if (matchingCells !== x.ammount) {
-        console.log("not enough plants for level to beat");
-        return;
-      }
-
-      // Now, you can handle the matching cells for the current species (e.g., Flytrap)
-      console.log(
-        `Found ${matchingCells} plantable cells for ${species} with growth level ${x.growthLevel}, LEVEL COMPLETE!`,
-      );
-    }
-  }
-  getPlantsNearby(): number {
-    return this.plantableCells.filter((e) =>
-      e.planterBox.plant.species !== "none"
-    ).length - 1;
   }
 }
