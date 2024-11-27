@@ -4,6 +4,8 @@ import Player from "../../assets/player/player.png";
 import TurnButton from "../../assets/turnButton/turnButton.png";
 import ReapButton from "../../assets/turnButton/reapButton.png";
 import SowButton from "../../assets/turnButton/sowButton.png";
+import Undobutton from "../../assets/turnButton/undoButton.png";
+import RedoButton from "../../assets/turnButton/redoButton.png";
 import PlayerJson from "../../assets/player/player-walk-anims.json" with {
   type: "json",
 };
@@ -39,6 +41,8 @@ export default class Load extends Phaser.Scene {
     this.load.image("turnButton", TurnButton);
     this.load.image("reapButton", ReapButton);
     this.load.image("sowButton", SowButton);
+    this.load.image("undoButton", Undobutton);
+    this.load.image("redoButton", RedoButton);
 
     this.load.json("scenario", scenario);
     this.load.json("plantGrowthReq", plantGrowth);
