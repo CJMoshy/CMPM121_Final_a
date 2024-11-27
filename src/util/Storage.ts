@@ -10,6 +10,8 @@ export function saveGameState(state: GameState, slot: number) {
   localStorage.setItem(HASH, JSON.stringify(state));
 }
 
+// this returns false if no game state has been found
+// TODO load a specific game state
 export function loadGameState(
   slot: number,
 ): [number, number, ArrayBuffer] | false {

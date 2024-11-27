@@ -25,12 +25,33 @@ export default class GameManager {
     this.UIManager = UIManager;
     this.TimeManager = TimeManager;
     this.savedGameSlot = 1;
+
+    // query the html and get the dropdown of what save
+    const gameSavesSelect = document.getElementById(
+      "gameSaves",
+    ) as HTMLSelectElement; // it will always start at 1
+
+    // whenever it changes set that to the state we want to save
+    gameSavesSelect.addEventListener("change", () => {
+      this.savedGameSlot = Number(
+        gameSavesSelect.value.at(gameSavesSelect.value.length - 1),
+      );
+      console.log(`User selected: ${this.savedGameSlot}`);
+    });
+
+    // save button saves the game
+    document.getElementById("saveBtn")?.addEventListener(
+      "click",
+      () => this.saveGame(),
+    );
   }
 
+  // getter for the game slot
   getSavedGameSlot() {
     return this.savedGameSlot;
   }
-  
+
+  // setter
   setSavedGameSlot(slot: number) {
     this.savedGameSlot = slot;
   }
@@ -40,10 +61,11 @@ export default class GameManager {
     // set up game
     this.TimeManager.initTimeElapsing();
     this.UIManager.initUI();
-    this.loadSavedGame();
+    this.loadSavedGame(); // load saved game TODO -> load a specific save
     this.UIManager.setTurnText(this.turnCounter.toString());
   }
 
+  // save game funciton
   saveGame() {
     const toByteArr = new Uint8Array(
       this.plantManager.getPlantableCellBuffer(),
@@ -55,50 +77,59 @@ export default class GameManager {
     }, this.savedGameSlot); // for now only save is in slot 1
   }
 
+  // load game from local storage
   loadSavedGame() {
-    if (!loadGameState(this.savedGameSlot)) {
-      this.scene.events.emit("newGameEvent");
-      this.turnCounter = 1;
-      this.currentLevel = 1;
-    } else {
-      let plantData: ArrayBuffer;
+    if (!loadGameState(this.savedGameSlot)) { // loadGameState can return false
+      this.scene.events.emit("newGameEvent"); // this means its a new game
+      this.turnCounter = 1; // so we set defaults
+      this.currentLevel = 1; // so we set defaults
+    } else { // otherwise we found some data
+      let plantData: ArrayBuffer; // so we load it
       [this.currentLevel, this.turnCounter, plantData] = loadGameState(
         this.savedGameSlot,
       ) as [number, number, ArrayBuffer];
-      this.plantManager.setPlantableCellBuffer(plantData);
+      this.plantManager.setPlantableCellBuffer(plantData); // set all the cells to the loaded data
     }
   }
 
+  // logic for advancing turn
   advanceTurn() {
     this.turnCounter += 1;
-    const asCells = this.plantManager.getAllPlantableCells();
-    let count = 0;
+    const asCells = this.plantManager.getAllPlantableCells(); // get all cells as Cell[] type for easy manip
+    this.scene.events.emit( // emit an event that game state is advancing
+      "gameStateAdvance",
+      JSON.parse(JSON.stringify(asCells)), // make a deep copy of the cells and pass it with the event SEE PLAY.ts line
+    );
+    let arrayBufferOffset = 0; // this is needed for the arraybuffer
     asCells.forEach((cell) => {
       this.generateSun(cell);
       this.generateWater(cell);
       this.plantManager.updatePlantGrowth(cell);
-      this.plantManager.addPlantableCell(count, cell);
-      count += 1;
+      this.plantManager.addPlantableCell(arrayBufferOffset, cell); // write to the buffer the updated cells
+      arrayBufferOffset += 1;
     });
 
-    if (this.selectedCell) {
-      this.UIManager.updatePlantInfoUI(
+    if (this.selectedCell) { // is there a window open with a cell in it
+      this.UIManager.updatePlantInfoUI( // then update the ui
         this.plantManager.getAllPlantableCells()[this.selectedCellIndex]
           .planterBox,
       );
     }
 
+    // query level status
     this.handleCompleteLevel();
-    this.UIManager.setTurnText(this.turnCounter.toString());
+    this.UIManager.setTurnText(this.turnCounter.toString()); // increment turn counter
 
-    // save NEW TODO
+    // save game
     this.saveGame();
   }
 
+  // elton generate thing
   generateSun(currentCell: Cell) {
     currentCell.planterBox.sunLevel = Phaser.Math.Between(0, 5);
   }
 
+  // elton generate thing
   generateWater(currentCell: Cell) {
     currentCell.planterBox.waterLevel = currentCell.planterBox.waterLevel +
       Number(Phaser.Math.FloatBetween(0, 3).toFixed(3));
@@ -107,6 +138,7 @@ export default class GameManager {
     }
   }
 
+  // deals with beating a level
   handleCompleteLevel() {
     const query = this.scene.cache.json.get("scenario") as LevelsData;
     const levelRequirement = query.levels.find((e) =>

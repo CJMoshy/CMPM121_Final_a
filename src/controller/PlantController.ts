@@ -2,38 +2,42 @@ import GAME_CONFIG from "../util/GameConfig.ts";
 
 export default class PlantManager {
   private scene: Phaser.Scene;
-  private plantableCellsBuffer: ArrayBuffer;
-  private plantableCellsView: DataView;
+  private plantableCellsBuffer: ArrayBuffer; // updated storage mech
+  private plantableCellsView: DataView; // used to set,get from array buffer
 
   constructor(scene: Phaser.Scene) {
-    this.scene = scene;
-    this.plantableCellsBuffer = new ArrayBuffer(
+    this.scene = scene; // copy scene ref
+    this.plantableCellsBuffer = new ArrayBuffer( // init a new buffer
       GAME_CONFIG.STORAGE.CELL_SIZE_IN_BYTES *
         GAME_CONFIG.STORAGE.CELLS_IN_GRID,
     );
-    this.plantableCellsView = new DataView(this.plantableCellsBuffer);
+    this.plantableCellsView = new DataView(this.plantableCellsBuffer); // tie view to buffer
   }
 
+  // getter for buffer
   getPlantableCellBuffer() {
     return this.plantableCellsBuffer;
   }
 
+  // setter
   setPlantableCellBuffer(buf: ArrayBuffer) {
     this.plantableCellsBuffer = buf;
     this.plantableCellsView = new DataView(buf);
   }
 
+  // works on cell type, must be deserialized from arraybuf
   updatePlantGrowth(cell: Cell) {
-    const { plant, sunLevel, waterLevel } = cell.planterBox;
-    if (plant.species === "none") return;
+    const { plant, sunLevel, waterLevel } = cell.planterBox; // destructure from main obj
+    if (plant.species === "none") return; // if there isnt a plant here then move on
 
     const plantRules = this.scene.cache.json.get(
       "plantGrowthReq",
     ) as PlantsData;
-    const rule = plantRules.plants.find((p) => p.name === plant.species);
+    const rule = plantRules.plants.find((p) => p.name === plant.species); // get the specific growth rule for this plant type
 
-    if (!rule) return;
+    if (!rule) return; // if we didnt find a rule then dip
 
+    // find which stage of the rule to query the plant wiht
     let _required;
     switch (plant.growthLevel) {
       case 0:
@@ -49,6 +53,7 @@ export default class PlantManager {
         return;
     }
 
+    // query the plants
     if (
       this.getNearbyPlants() >= _required.proximity &&
       sunLevel >= _required.sunlevel &&
@@ -60,10 +65,11 @@ export default class PlantManager {
     }
   }
 
+  // helper to get plants near the current plant
   getNearbyPlants(): number {
     return this.getAllPlantableCells().filter((cell) =>
       cell.planterBox.plant.species !== "none"
-    ).length - 1;
+    ).length - 1; // 'this' plant shouldnt be counted TODO FIX
   }
 
   addPlantableCell(index: number, cell: Cell) {
@@ -71,6 +77,7 @@ export default class PlantManager {
       GAME_CONFIG.STORAGE.CELL_SIZE_IN_BYTES;
     let byteOffset = offset;
 
+    // helpers to step through the array
     const incrementByteOffset8 = () => byteOffset += 8;
     const incrementByteOffset1 = () => byteOffset += 1;
 
@@ -89,12 +96,14 @@ export default class PlantManager {
     this.plantableCellsView.setUint8(byteOffset, cell.planterBox.sunLevel);
     incrementByteOffset1();
 
+    // growth level
     this.plantableCellsView.setUint8(
       byteOffset,
       cell.planterBox.plant.growthLevel,
     );
     incrementByteOffset1();
 
+    // map the plant names to numbers for less storage space
     const PlantSpeciesEnum = {
       "none": 0,
       "Flytrap": 1,
@@ -108,8 +117,9 @@ export default class PlantManager {
     incrementByteOffset1();
   }
 
+  // deserialization method for a given cell
   getPlantableCell(index: number): Cell {
-    const offset = index * GAME_CONFIG.STORAGE.CELL_SIZE_IN_BYTES;
+    const offset = index * GAME_CONFIG.STORAGE.CELL_SIZE_IN_BYTES; // where in the buffer we at
     let byteOffset = offset;
 
     // Deserialize fields in order
@@ -137,6 +147,7 @@ export default class PlantManager {
     const species = plantSpeciesEnumReverse[speciesIndex];
     byteOffset += 1;
 
+    // returns a cell associated with the given index
     return {
       i,
       j,
@@ -151,6 +162,7 @@ export default class PlantManager {
     };
   }
 
+  // get all indexes as a Cell[]
   getAllPlantableCells() {
     const plantableCells: Cell[] = [];
     for (let x = 0; x < 8; x++) {

@@ -23,6 +23,25 @@
           <input type="radio" name="choice" value="none"> No Plant
         </label><br>
       </div>
+      <div class="undo-redo-container">
+        <button id="undoBtn">Undo</button>
+        <button id="redoBtn">Redo</button>
+      </div>
+      <div class="save-container">
+        <select name="gameSaves" id="gameSaves">
+          <option value="save1">Slot 1</option>
+          <option value="save2">Slot 2</option>
+          <option value="save3">Slot 3</option>
+          <option value="save4">Slot 4</option>
+        </select>
+        <button id="saveBtn">
+          Save
+        </button>
+        <p>
+          Game is automatically saved after each turn, but you can manually save
+          at any point
+        </p>
+      </div>
     </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
