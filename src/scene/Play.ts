@@ -12,13 +12,15 @@ export default class Play extends Phaser.Scene {
   private UIWindowOpen!: boolean;
   private tileOutline!: Phaser.GameObjects.Image;
 
-  private plantManager!: PlantManager;
-  private UIManager!: UIManager;
-  private TimeManager!: TimeManager;
+  private plantManager: PlantManager;
+  private UIManager: UIManager;
+  private TimeManager: TimeManager;
   private gameManager: GameManager;
   private commandPipeline: CommandPipeline;
+
   constructor() {
     super({ key: "playScene" });
+
     this.UIWindowOpen = false;
     this.plantManager = new PlantManager(this);
     this.UIManager = new UIManager(this);
@@ -30,6 +32,7 @@ export default class Play extends Phaser.Scene {
       this.TimeManager,
     );
     this.commandPipeline = new CommandPipeline();
+
     document.getElementById("undoBtn")?.addEventListener(
       "click",
       () => this.commandPipeline.undo(),
@@ -43,6 +46,7 @@ export default class Play extends Phaser.Scene {
   init() {}
   preload() {}
   create() {
+    // TILESET LOGIC
     const map = this.add.tilemap("FarmTilemap");
     const tiles = map.addTilesetImage("FarmTileset", "base-tileset")!;
 
@@ -63,11 +67,11 @@ export default class Play extends Phaser.Scene {
       tiles,
       0,
       0,
-    )?.setScale(4);
+    )?.setScale(4).setInteractive();
     dirtLayer?.setCollisionByProperty({ Interactable: true });
     map.setCollisionByProperty({ OpenWindow: true });
 
-    dirtLayer?.setInteractive().on("pointermove", () => {
+    dirtLayer?.on("pointermove", () => {
       this.tileOutline?.destroy();
       const tile = dirtLayer?.getTileAtWorldXY(
         this.game.input.activePointer!.x,
@@ -108,8 +112,7 @@ export default class Play extends Phaser.Scene {
     // TODO FIX
     // whenever the game state moves forward we want to save the previous board state so we can undo
     this.events.on("gameStateAdvance", (arg: Cell[]) => {
-      console.log(arg);
-      this.commandPipeline.preformAction({
+      this.commandPipeline.addCommand({
         executeUndo: () => {
           let count = 0;
           for (const cell of arg) {
@@ -117,6 +120,8 @@ export default class Play extends Phaser.Scene {
             this.plantManager.addPlantableCell(count, cell);
             count += 1;
           }
+          // something something turn counter decrement
+          // something something reverse time ? lol
           if (this.gameManager.selectedCell) {
             this.UIManager.updatePlantInfoUI(
               this.gameManager.selectedCell.planterBox,
@@ -124,11 +129,12 @@ export default class Play extends Phaser.Scene {
           }
         },
         executeRedo: () => {
-          this.events.emit("newTurnEvent");
+          this.events.emit("newTurnEvent"); // TODO this is busted
         },
       });
     });
 
+    // if a new game exists then we need to go through all the cells and set them up
     this.events.on("newGameEvent", () => {
       const iterableDirt = map.getObjectLayer("Plantable")!;
       let count = 0;
@@ -215,7 +221,7 @@ export default class Play extends Phaser.Scene {
     };
     preformReap(); // reap it
 
-    this.commandPipeline.preformAction({
+    this.commandPipeline.addCommand({
       executeUndo: () => { // this is the opposite of reaping. its not sowing because in the future if we tie more logic into sow we could be potentially losing seeds etc...
         plant.species = plantAlias.species;
         plant.growthLevel = plantAlias.growthLevel;
@@ -270,7 +276,7 @@ export default class Play extends Phaser.Scene {
       };
       preformSow(); // run it
 
-      this.commandPipeline.preformAction({
+      this.commandPipeline.addCommand({
         executeUndo: () => { // opposite / undo
           plant.species = "none";
           plant.growthLevel = 0;

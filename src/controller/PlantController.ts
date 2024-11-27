@@ -78,30 +78,29 @@ export default class PlantManager {
     let byteOffset = offset;
 
     // helpers to step through the array
-    const incrementByteOffset8 = () => byteOffset += 8;
-    const incrementByteOffset1 = () => byteOffset += 1;
+    const incrementByteOffset = (val: number) => byteOffset += val;
 
     // i and j
     this.plantableCellsView.setFloat64(byteOffset, cell.i);
-    incrementByteOffset8();
+    incrementByteOffset(8);
     this.plantableCellsView.setFloat64(byteOffset, cell.j);
-    incrementByteOffset8();
+    incrementByteOffset(8);
 
     // water and sun levels
     this.plantableCellsView.setUint8(
       byteOffset,
       cell.planterBox.waterLevel,
     );
-    incrementByteOffset1();
+    incrementByteOffset(1);
     this.plantableCellsView.setUint8(byteOffset, cell.planterBox.sunLevel);
-    incrementByteOffset1();
+    incrementByteOffset(1);
 
     // growth level
     this.plantableCellsView.setUint8(
       byteOffset,
       cell.planterBox.plant.growthLevel,
     );
-    incrementByteOffset1();
+    incrementByteOffset(1);
 
     // map the plant names to numbers for less storage space
     const PlantSpeciesEnum = {
@@ -114,7 +113,7 @@ export default class PlantManager {
       byteOffset,
       PlantSpeciesEnum[cell.planterBox.plant.species],
     );
-    incrementByteOffset1();
+    incrementByteOffset(1);
   }
 
   // deserialization method for a given cell
@@ -122,19 +121,20 @@ export default class PlantManager {
     const offset = index * GAME_CONFIG.STORAGE.CELL_SIZE_IN_BYTES; // where in the buffer we at
     let byteOffset = offset;
 
+    const incrementByteOffset = (val: number) => byteOffset += val;
     // Deserialize fields in order
     const i = this.plantableCellsView.getFloat64(byteOffset);
-    byteOffset += 8;
+    incrementByteOffset(8);
     const j = this.plantableCellsView.getFloat64(byteOffset);
-    byteOffset += 8;
+    incrementByteOffset(8);
 
     const waterLevel = this.plantableCellsView.getUint8(byteOffset);
-    byteOffset += 1;
+    incrementByteOffset(1);
     const sunLevel = this.plantableCellsView.getUint8(byteOffset);
-    byteOffset += 1;
+    incrementByteOffset(1);
 
     const growthLevel = this.plantableCellsView.getUint8(byteOffset);
-    byteOffset += 1;
+    incrementByteOffset(1);
 
     const speciesIndex = this.plantableCellsView.getUint8(byteOffset);
     const plantSpeciesEnumReverse: PlantSpecies[] = [
@@ -145,7 +145,7 @@ export default class PlantManager {
     ];
 
     const species = plantSpeciesEnumReverse[speciesIndex];
-    byteOffset += 1;
+    incrementByteOffset(1);
 
     // returns a cell associated with the given index
     return {

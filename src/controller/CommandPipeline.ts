@@ -12,8 +12,8 @@ export default class CommandPipeline implements ICommandPipeline {
     this.redoStack = [];
   }
 
-  preformAction(action: AbstractGameCommand) {
-    this.actionStack.push(action);
+  addCommand(cmd: AbstractGameCommand) {
+    this.actionStack.push(cmd);
   }
 
   undo() {

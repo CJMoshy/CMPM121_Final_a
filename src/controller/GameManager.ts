@@ -74,7 +74,7 @@ export default class GameManager {
       currentLevel: this.currentLevel,
       currentTurn: this.turnCounter,
       plantData: Array.from(toByteArr),
-    }, this.savedGameSlot); // for now only save is in slot 1
+    }, this.savedGameSlot); // pass in a 'slot' to save different instances of the game
   }
 
   // load game from local storage
@@ -98,7 +98,7 @@ export default class GameManager {
     const asCells = this.plantManager.getAllPlantableCells(); // get all cells as Cell[] type for easy manip
     this.scene.events.emit( // emit an event that game state is advancing
       "gameStateAdvance",
-      JSON.parse(JSON.stringify(asCells)), // make a deep copy of the cells and pass it with the event SEE PLAY.ts line
+      JSON.parse(JSON.stringify(asCells)), // make a deep copy of the cells and pass it with the event SEE PLAY.ts line 108
     );
     let arrayBufferOffset = 0; // this is needed for the arraybuffer
     asCells.forEach((cell) => {
