@@ -1,26 +1,27 @@
 import Phaser from "phaser";
 
-import Player from "../../assets/player/player.png";
-import TurnButton from "../../assets/turnButton/turnButton.png";
+const Player = getAssetUrl("../../assets/player/player.png");
+const TurnButton = getAssetUrl("../../assets/turnButton/turnButton.png");
 import PlayerJson from "../../assets/player/player-walk-anims.json" with {
   type: "json",
 };
 
-import tilemap from "../../assets/tilemap/Farm.png";
+const tilemap = getAssetUrl("../../assets/tilemap/Farm.png");
 import tilemapJSON from "../../assets/tilemap/FarmTilemap.json" with {
   type: "json",
 };
-
-import outline from "../../assets/outline.png";
-
-import textBox from "../../assets/DialogueBox.png";
-
+const outline = getAssetUrl("../../assets/outline.png");
+const textBox = getAssetUrl("../../assets/DialogueBox.png");
 import scenario from "../util/gameLogic/scenario.json" with {
   type: "json",
 };
 import plantGrowth from "../util/gameLogic/plants.json" with {
   type: "json",
 };
+
+function getAssetUrl(path: string): string {
+  return new URL(path, import.meta.url).href;
+}
 
 export default class Load extends Phaser.Scene {
   constructor() {

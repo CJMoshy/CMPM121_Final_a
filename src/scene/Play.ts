@@ -207,21 +207,7 @@ export default class Play extends Phaser.Scene {
     const selectedCellIndexAlias = this.gameManager.selectedCellIndex; // this works but we might need to deep copy
     const plantAlias = JSON.parse(JSON.stringify(plant)); // deep copy here to ensure old plant stays the same?
 
-    // heres the closure
-    const preformReap = () => {
-      plant.species = "none"; // this is everything associated with reaping
-      plant.growthLevel = 0; // this is everything associated with reaping
-      this.plantManager.addPlantableCell( // this is everything associated with reaping
-        selectedCellIndexAlias,
-        selectedCellAlias,
-      );
-      this.UIManager.updatePlantInfoUI( // this is everything associated with reaping
-        selectedCellAlias.planterBox,
-      );
-    };
-    preformReap(); // reap it
-
-    this.commandPipeline.addCommand({
+    const command = {
       executeUndo: () => { // this is the opposite of reaping. its not sowing because in the future if we tie more logic into sow we could be potentially losing seeds etc...
         plant.species = plantAlias.species;
         plant.growthLevel = plantAlias.growthLevel;
@@ -234,9 +220,20 @@ export default class Play extends Phaser.Scene {
         );
       },
       executeRedo: () => {
-        preformReap(); // the undo is just the reap again
+        plant.species = "none"; // this is everything associated with reaping
+        plant.growthLevel = 0; // this is everything associated with reaping
+        this.plantManager.addPlantableCell( // this is everything associated with reaping
+          selectedCellIndexAlias,
+          selectedCellAlias,
+        );
+        this.UIManager.updatePlantInfoUI( // this is everything associated with reaping
+          selectedCellAlias.planterBox,
+        );
       },
-    });
+    };
+
+    this.commandPipeline.addCommand(command);
+    command.executeRedo();
   }
 
   // same idea as above
@@ -262,21 +259,7 @@ export default class Play extends Phaser.Scene {
       const selectedCellAlias = this.gameManager.selectedCell;
       const selectedCellIndexAlias = this.gameManager.selectedCellIndex;
 
-      // heres the closure (command)
-      const preformSow = () => {
-        plant.species = selectedRadio
-          .value as PlantSpecies;
-        this.plantManager.addPlantableCell(
-          selectedCellIndexAlias,
-          selectedCellAlias,
-        );
-        this.UIManager.updatePlantInfoUI(
-          selectedCellAlias!.planterBox,
-        );
-      };
-      preformSow(); // run it
-
-      this.commandPipeline.addCommand({
+      const command = {
         executeUndo: () => { // opposite / undo
           plant.species = "none";
           plant.growthLevel = 0;
@@ -289,9 +272,20 @@ export default class Play extends Phaser.Scene {
           );
         },
         executeRedo: () => {
-          preformSow(); // sow it again
+          plant.species = selectedRadio
+            .value as PlantSpecies;
+          this.plantManager.addPlantableCell(
+            selectedCellIndexAlias,
+            selectedCellAlias,
+          );
+          this.UIManager.updatePlantInfoUI(
+            selectedCellAlias!.planterBox,
+          );
         },
-      });
+      };
+
+      this.commandPipeline.addCommand(command);
+      command.executeRedo();
     } else {
       console.log("Plant not selected");
     }
