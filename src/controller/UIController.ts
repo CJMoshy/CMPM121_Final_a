@@ -44,13 +44,13 @@ export default class UIManager {
     const TEXT_Y = GAME_CONFIG.UI.BORDER_PADDING;
 
     this.writingBox = this.scene.add.sprite(TEXT_X, TEXT_Y, "dBox")
-      .setOrigin(0.5, 0).setAlpha(0).setScale(1.5);
+      .setOrigin(0.5, 0).setAlpha(1).setScale(1.5);
 
     this.writingText = this.scene.add.text(
       TEXT_X,
-      TEXT_Y + GAME_CONFIG.UI.TEXT_PADDING,
-      "Select a PlanterBox",
-    ).setScale(1.5).setOrigin(0.5).setAlpha(0);
+      TEXT_Y + GAME_CONFIG.UI.TEXT_PADDING + 8,
+    "Select plants below the screen\nPlants grow based on sun, \nwater, and nearby plants\nWalk to the planter box to start"
+    ).setScale(1.5).setOrigin(0.5).setAlpha(1);
 
     this.reapBtn = this.scene.add
       .sprite(TEXT_X - 200, TEXT_Y + 75, "reapButton", 0)
@@ -92,6 +92,9 @@ export default class UIManager {
   }
 
   openWindow() {
+    this.writingText.setText(
+      `         Select a planter box`
+    ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
     this.scene.add.tween({
       targets: [this.writingBox, this.writingText, this.reapBtn, this.sowBtn],
       alpha: { from: 0, to: 1 },
@@ -133,6 +136,46 @@ export default class UIManager {
         Sun: ${plantData.sunLevel}
         Species: ${plantData.plant.species}
         Growth: ${plantData.plant.growthLevel}`,
+    ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
+
+    this.reapBtn.setAlpha(1);
+    this.sowBtn.setAlpha(1);
+    this.reapBtn.setInteractive();
+    this.sowBtn.setInteractive();
+  }
+
+  initLevelRequirements() {
+    this.writingText.setText(
+      `       Select plants below the screen
+        Plants grow based on sun, water, and nearby plants
+        You need a certain number of plants to beat the level
+        Select a planter box to start`
+    ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
+
+    this.reapBtn.setAlpha(0);
+    this.sowBtn.setAlpha(0);
+    this.reapBtn.setInteractive(false);
+    this.sowBtn.setInteractive(false);
+  }
+
+  updateLevelRequirements(species: string, amount: number, growthLevel: number, currAmount: number) {
+    this.writingText.setText(
+      `        It is a new day!
+        You need ${amount} box(es) of ${species} 
+        at growth level ${growthLevel}
+        to complete this level
+        You currently have ${currAmount}`
+    ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
+
+    this.reapBtn.setAlpha(0);
+    this.sowBtn.setAlpha(0);
+    this.reapBtn.setInteractive(false);
+    this.sowBtn.setInteractive(false);
+  }
+
+  updateWinText(){
+    this.writingText.setText(
+      `        You beat the level!`
     ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
   }
 

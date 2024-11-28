@@ -110,7 +110,7 @@ export default class Play extends Phaser.Scene {
     this.player = new Player(
       this,
       this.game.config.width as number / 2,
-      this.game.config.height as number / 2,
+      this.game.config.height as number / 2 - 64,
       "player",
       0,
       64,
@@ -165,6 +165,7 @@ export default class Play extends Phaser.Scene {
     plant.sprite?.destroy();
     plant.sprite = undefined;
     plant.species = "none";
+    plant.growthLevel = 0;
     this.UIManager.updatePlantInfoUI(this.gameManager.selectedCell.planterBox);
   }
 

@@ -80,6 +80,7 @@ export default class GameManager {
       );
 
       if (!hasMatchingGrowthLevel) {
+        this.UIManager.updateLevelRequirements(species, x.amount, x.growthLevel, 0);
         console.log("no plant found at correct growth level ");
         return;
       }
@@ -89,12 +90,14 @@ export default class GameManager {
         e.planterBox.plant.species === species
       ).length;
 
-      if (matchingCells !== x.ammount) {
+      if (matchingCells <= x.amount) {
+        this.UIManager.updateLevelRequirements(species, x.amount, x.growthLevel, matchingCells);
         console.log("not enough plants for level to beat");
         return;
       }
 
       // Now, you can handle the matching cells for the current species (e.g., Flytrap)
+      this.UIManager.updateWinText();
       console.log(
         `Found ${matchingCells} plantable cells for ${species} with growth level ${x.growthLevel}, LEVEL COMPLETE!`,
       );

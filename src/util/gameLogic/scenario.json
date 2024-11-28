@@ -5,7 +5,7 @@
       "requirements": {
         "plants": {
           "Flytrap": {
-            "ammount": 1,
+            "amount": 1,
             "growthLevel": 2
           }
         }
@@ -16,11 +16,11 @@
       "requirements": {
         "plants": {
           "Flytrap": {
-            "ammount": 1,
+            "amount": 1,
             "growthLevel": 3
           },
           "Wheat": {
-            "ammount": 1,
+            "amount": 1,
             "growthLevel": 2
           }
         }
