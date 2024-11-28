@@ -189,8 +189,9 @@ export default class Play extends Phaser.Scene {
       plant.sprite = this.add.sprite(
         (this.gameManager.selectedCell.i * 4) + 32,
         (this.gameManager.selectedCell.j * 4) + 32,
-        "player",
+        `${selectedRadio.value as PlantSpecies}` + "Level0",
       );
+      plant.sprite.setScale(2);
       plant.species = selectedRadio
         .value as PlantSpecies;
       this.UIManager.updatePlantInfoUI(

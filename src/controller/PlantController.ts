@@ -40,6 +40,7 @@ export default class PlantManager {
       cell.planterBox.plant.growthLevel++;
       cell.planterBox.sunLevel -= _required.sunlevel;
       cell.planterBox.waterLevel -= _required.waterlevel;
+      cell.planterBox.plant.sprite?.setTexture(cell.planterBox.plant.species + "Level" + cell.planterBox.plant.growthLevel);
     }
   }
 
@@ -55,5 +56,10 @@ export default class PlantManager {
 
   getCells() {
     return this.plantableCells;
+  }
+
+  getPlantSprite(): string{
+    
+    return "player";
   }
 }
