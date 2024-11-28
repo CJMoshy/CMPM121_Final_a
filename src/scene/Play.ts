@@ -43,6 +43,12 @@ export default class Play extends Phaser.Scene {
       "click",
       () => this.commandPipeline.redo(),
     );
+    document.getElementById("loadBtn")?.addEventListener(
+      "click",
+      () => {
+        this.gameManager.loadGameFromSlot();
+      },
+    );
   }
 
   init() {}

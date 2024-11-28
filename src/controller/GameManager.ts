@@ -106,6 +106,38 @@ export default class GameManager {
     //this.CommandPipeline.loadFromLocalStorage();
   }
 
+  //this is not the local storage but loading from the save slots
+  loadGameFromSlot() {
+    const loadedState = loadGameState(this.savedGameSlot);
+    // Destructure the loaded state
+
+    if (loadedState === false) {
+      //make a new game as seen in loadSavedGame
+      console.log(
+        `No saved game found in slot ${this.savedGameSlot}, initializing a new save.`,
+      );
+      this.scene.events.emit("newGameEvent");
+      this.turnCounter = 1;
+      this.currentLevel = 1;
+      //reset the UI Manager and text
+      this.UIManager.setTurnText(this.turnCounter.toString());
+      // Load the save in the slot
+      loadGameState(this.savedGameSlot);
+      return;
+    }
+
+    const [loadedLevel, loadedTurn, loadedPlantBuffer] = loadedState;
+
+    // Update game objects
+    this.currentLevel = loadedLevel;
+    this.turnCounter = loadedTurn;
+    this.plantManager.setPlantableCellBuffer(loadedPlantBuffer);
+
+    // Update UI
+    this.UIManager.setTurnText(loadedTurn.toString());
+    console.log(`Game state loaded from slot ${this.savedGameSlot}`);
+  }
+
   // logic for advancing turn
   advanceTurn() {
     this.turnCounter += 1;

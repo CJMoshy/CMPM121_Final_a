@@ -1,48 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CMPM 121 Final Iteration A</title>
-  </head>
-  <body>
-    <div id="app">
-      <div id="phaser-game"></div>
-      <h2>Plant Species (Select)</h2>
-      <div class="plant-selection">
-        <label>
-          <input type="radio" name="choice" value="Flytrap"> Flytrap
-        </label><br>
-        <label>
-          <input type="radio" name="choice" value="Wheat"> Wheat
-        </label><br>
-        <label>
-          <input type="radio" name="choice" value="Aloe Vera"> Aloe Vera
-        </label><br>
-        <label>
-          <input type="radio" name="choice" value="none"> No Plant
-        </label><br>
-      </div>
-      <div class="undo-redo-container">
-        <button id="undoBtn">Undo</button>
-        <button id="redoBtn">Redo</button>
-      </div>
-      <div class="save-container">
-        <select name="gameSaves" id="gameSaves">
-          <option value="save1">Slot 1</option>
-          <option value="save2">Slot 2</option>
-          <option value="save3">Slot 3</option>
-          <option value="save4">Slot 4</option>
-        </select>
-        <button id="saveBtn">
-          Save
-        </button>
-        <p>
-          Game is automatically saved after each turn, but you can manually save
-          at any point
-        </p>
-      </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CMPM 121 Final Iteration A</title>
+</head>
+
+<body>
+  <div id="app">
+    <div id="phaser-game"></div>
+    <h2>Plant Species (Select)</h2>
+    <div class="plant-selection">
+      <label>
+        <input type="radio" name="choice" value="Flytrap"> Flytrap
+      </label><br>
+      <label>
+        <input type="radio" name="choice" value="Wheat"> Wheat
+      </label><br>
+      <label>
+        <input type="radio" name="choice" value="Aloe Vera"> Aloe Vera
+      </label><br>
+      <label>
+        <input type="radio" name="choice" value="none"> No Plant
+      </label><br>
     </div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+    <div class="undo-redo-container">
+      <button id="undoBtn">Undo</button>
+      <button id="redoBtn">Redo</button>
+    </div>
+    <div class="save-container">
+      <select name="gameSaves" id="gameSaves">
+        <option value="save1">Slot 1</option>
+        <option value="save2">Slot 2</option>
+        <option value="save3">Slot 3</option>
+        <option value="save4">Slot 4</option>
+      </select>
+      <button id="saveBtn">
+        Save
+      </button>
+      <button id="loadBtn">
+        Load
+      </button>
+      <p>
+        Game is automatically saved after each turn, but you can manually save
+        at any point
+      </p>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>
