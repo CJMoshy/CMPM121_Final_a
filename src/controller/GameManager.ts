@@ -90,7 +90,7 @@ export default class GameManager {
         e.planterBox.plant.species === species
       ).length;
 
-      if (matchingCells <= x.amount) {
+      if (matchingCells < x.amount) {
         this.UIManager.updateLevelRequirements(species, x.amount, x.growthLevel, matchingCells);
         console.log("not enough plants for level to beat");
         return;
