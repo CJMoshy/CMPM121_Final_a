@@ -120,13 +120,11 @@ export default class UIManager {
 
   reap() {
     this.scene.events.emit("reapEvent");
-    // Manage reap logic or call back into the scene as required
     console.log("Reap button pressed");
   }
 
   sow() {
     this.scene.events.emit("sowEvent");
-    // Sow logic
     console.log("Sow button pressed");
   }
 

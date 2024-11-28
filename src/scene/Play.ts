@@ -5,19 +5,22 @@ import PlantManager from "../controller/PlantController.ts";
 import UIManager from "../controller/UIController.ts";
 import TimeManager from "../controller/TimeController.ts";
 import GameManager from "../controller/GameManager.ts";
+import CommandPipeline from "../controller/CommandPipeline.ts";
 
 export default class Play extends Phaser.Scene {
   private player!: Player;
   private UIWindowOpen!: boolean;
   private tileOutline!: Phaser.GameObjects.Image;
 
-  private plantManager!: PlantManager;
-  private UIManager!: UIManager;
-  private TimeManager!: TimeManager;
+  private plantManager: PlantManager;
+  private UIManager: UIManager;
+  private TimeManager: TimeManager;
   private gameManager: GameManager;
+  private commandPipeline: CommandPipeline;
 
   constructor() {
     super({ key: "playScene" });
+
     this.UIWindowOpen = false;
     this.plantManager = new PlantManager(this);
     this.UIManager = new UIManager(this);
@@ -28,11 +31,23 @@ export default class Play extends Phaser.Scene {
       this.UIManager,
       this.TimeManager,
     );
+    this.commandPipeline = new CommandPipeline();
+    
+
+    document.getElementById("undoBtn")?.addEventListener(
+      "click",
+      () => this.commandPipeline.undo(),
+    );
+    document.getElementById("redoBtn")?.addEventListener(
+      "click",
+      () => this.commandPipeline.redo(),
+    );
   }
 
   init() {}
   preload() {}
   create() {
+    // TILESET LOGIC
     const map = this.add.tilemap("FarmTilemap");
     const tiles = map.addTilesetImage("FarmTileset", "base-tileset")!;
 
@@ -53,28 +68,17 @@ export default class Play extends Phaser.Scene {
       tiles,
       0,
       0,
-    )?.setScale(4);
+    )?.setScale(4).setInteractive();
     dirtLayer?.setCollisionByProperty({ Interactable: true });
     map.setCollisionByProperty({ OpenWindow: true });
 
+    //initialize/adding sprites for all tiles, sprites will get set later so only added once
     const iterableDirt = map.getObjectLayer("Plantable")!;
     iterableDirt.objects.forEach((element) => {
-      this.plantManager.addPlantableCell({
-        i: Math.floor(element.x as number),
-        j: Math.floor(element.y as number),
-        planterBox: {
-          waterLevel: 0,
-          sunLevel: 0,
-          plant: {
-            species: "none",
-            growthLevel: plantGrowthLevel.seedling,
-            sprite: undefined,
-          },
-        },
-      });
+      this.plantManager.initSprite(Math.floor(element.x as number), Math.floor(element.y as number))
     });
 
-    dirtLayer?.setInteractive().on("pointermove", () => {
+    dirtLayer?.on("pointermove", () => {
       this.tileOutline?.destroy();
       const tile = dirtLayer?.getTileAtWorldXY(
         this.game.input.activePointer!.x,
@@ -96,15 +100,84 @@ export default class Play extends Phaser.Scene {
         this.game.input.activePointer!.y,
       );
       if (tile?.properties.Interactable) {
-        const plantableCell = this.plantManager.getCells().find((cell) =>
-          cell.i === tile.pixelX + 1 && cell.j === tile.pixelY
-        );
+        const plantableCell = this.plantManager.getAllPlantableCells().find((
+          cell,
+        ) => cell.i === tile.pixelX + 1 && cell.j === tile.pixelY);
+        const plantableCellIndex = this.plantManager.getAllPlantableCells()
+          .findIndex((
+            cell,
+          ) => cell.i === tile.pixelX + 1 && cell.j === tile.pixelY);
         if (plantableCell) {
           this.gameManager.selectedCell = plantableCell;
+          this.gameManager.selectedCellIndex = plantableCellIndex;
           const plantData = plantableCell.planterBox;
           this.UIManager.updatePlantInfoUI(plantData);
         }
       }
+    });
+
+    // TODO FIX
+    // whenever the game state moves forward we want to save the previous board state so we can undo
+    this.events.on("gameStateAdvance", (arg: Cell[]) => {
+      this.commandPipeline.addCommand({
+        executeUndo: () => {
+          let count = 0;
+          for (const cell of arg) {
+            console.log(cell);
+            this.plantManager.addPlantableCell(count, cell);
+            count += 1;
+          }
+          // something something turn counter decrement
+          // something something reverse time ? lol
+          if (this.gameManager.selectedCell) {
+            this.UIManager.updatePlantInfoUI(
+              this.gameManager.selectedCell.planterBox,
+            );
+          }
+        },
+        executeRedo: () => {
+          this.events.emit("newTurnEvent"); // TODO this is busted
+        },
+      });
+    });
+
+    // if a new game exists then we need to go through all the cells and set them up
+    this.events.on("newGameEvent", () => {
+      const iterableDirt = map.getObjectLayer("Plantable")!;
+      let count = 0;
+      iterableDirt.objects.forEach((element) => {
+        const cell:Cell = {
+          i: Math.floor(element.x as number),
+          j: Math.floor(element.y as number),
+          planterBox: {
+            waterLevel: 0,
+            sunLevel: 0,
+            plant: {
+              species: "none",
+              growthLevel: plantGrowthLevel.seedling,
+              // sprite: "blank"
+            },
+          },
+        }
+        this.plantManager.addPlantableCell(count, cell);
+
+        //set all sprites to blank
+        this.plantManager.updateSprite((Math.floor(element.x as number)), (Math.floor(element.y as number)), "blank");
+        count += 1;
+      });
+    });
+
+    this.events.on("loadGameSprites", () => {
+      const iterableDirt = map.getObjectLayer("Plantable")!;
+      iterableDirt.objects.forEach((element) => {
+        const plantableCell = this.plantManager.getAllPlantableCells().find((
+          cell,
+        ) => cell.i === Math.floor(element.x as number) && cell.j === Math.floor(element.y as number));
+        const plantSprite = plantableCell?.planterBox.plant.species;
+        if(plantSprite != "none"){
+          this.plantManager.updateSprite((Math.floor(element.x as number)), (Math.floor(element.y as number)), plantSprite+"Level"+plantableCell?.planterBox.plant.growthLevel);
+        }
+      });
     });
 
     this.player = new Player(
@@ -139,16 +212,7 @@ export default class Play extends Phaser.Scene {
     this.player.update();
   }
 
-  /**
-   * command pipeline will be an array of objects, where each object encapsulates both the command and the data associated with the command at that given point
-   * popping from the array to then execute the command is undo
-   * this gets pushed onto the redo stack
-   * poppinf from redo ...
-   *
-   * ex .. .[{function: reapCommand, data:{none...}}]
-   * ex .. .[{function: sowCommand, data:{plantBeingSowed: someplant }}]
-   */
-
+  // reap method encapsulates everything it needs to reap or sow in a closure which is passed to command pipeline as undo/redo
   reap() {
     if (!this.gameManager.selectedCell) {
       console.log("no cell selected");
@@ -162,13 +226,48 @@ export default class Play extends Phaser.Scene {
     console.log(
       `Reaping plant. species: ${plant.species} growthLevel: ${plant.growthLevel}`,
     );
-    plant.sprite?.destroy();
-    plant.sprite = undefined;
-    plant.species = "none";
-    plant.growthLevel = 0;
-    this.UIManager.updatePlantInfoUI(this.gameManager.selectedCell.planterBox);
+
+    // this is key we need alias of stuff so when they change we can remember the old things
+    const selectedCellAlias = this.gameManager.selectedCell; // this works but we might need to deep copy
+    const selectedCellIndexAlias = this.gameManager.selectedCellIndex; // this works but we might need to deep copy
+    const plantAlias = JSON.parse(JSON.stringify(plant)); // deep copy here to ensure old plant stays the same?
+
+    // heres the closure
+    const preformReap = () => {
+      plant.species = "none"; // this is everything associated with reaping
+      plant.growthLevel = 0; // this is everything associated with reaping
+
+      this.plantManager.updateSprite(selectedCellAlias.i, selectedCellAlias.j, "blank"); // set sprite to blank
+      
+      this.plantManager.addPlantableCell( // this is everything associated with reaping
+        selectedCellIndexAlias,
+        selectedCellAlias,
+      );
+      this.UIManager.updatePlantInfoUI( // this is everything associated with reaping
+        selectedCellAlias.planterBox,
+      );
+    };
+    preformReap(); // reap it
+
+    this.commandPipeline.addCommand({
+      executeUndo: () => { // this is the opposite of reaping. its not sowing because in the future if we tie more logic into sow we could be potentially losing seeds etc...
+        plant.species = plantAlias.species;
+        plant.growthLevel = plantAlias.growthLevel;
+        this.plantManager.addPlantableCell(
+          selectedCellIndexAlias,
+          selectedCellAlias,
+        );
+        this.UIManager.updatePlantInfoUI(
+          selectedCellAlias.planterBox,
+        );
+      },
+      executeRedo: () => {
+        preformReap(); // the undo is just the reap again
+      },
+    });
   }
 
+  // same idea as above
   sow() {
     if (!this.gameManager.selectedCell) {
       console.log("No cell selected");
@@ -185,18 +284,46 @@ export default class Play extends Phaser.Scene {
       console.log(
         `Sowing plant. species: ${selectedRadio.value as PlantSpecies}`,
       );
+
+      // same alias thing
       const { plant } = this.gameManager.selectedCell.planterBox;
-      plant.sprite = this.add.sprite(
-        (this.gameManager.selectedCell.i * 4) + 32,
-        (this.gameManager.selectedCell.j * 4) + 32,
-        `${selectedRadio.value as PlantSpecies}` + "Level0",
-      );
-      plant.sprite.setScale(2);
-      plant.species = selectedRadio
-        .value as PlantSpecies;
-      this.UIManager.updatePlantInfoUI(
-        this.gameManager.selectedCell.planterBox,
-      );
+      const selectedCellAlias = this.gameManager.selectedCell;
+      const selectedCellIndexAlias = this.gameManager.selectedCellIndex;
+
+      // heres the closure (command)
+      const preformSow = () => {
+        plant.species = selectedRadio
+          .value as PlantSpecies;
+      
+      //set sprite to the sapling of the species
+      this.plantManager.updateSprite(selectedCellAlias.i, selectedCellAlias.j, plant.species + "Level0");
+
+        this.plantManager.addPlantableCell(
+          selectedCellIndexAlias,
+          selectedCellAlias,
+        );
+        this.UIManager.updatePlantInfoUI(
+          selectedCellAlias!.planterBox,
+        );
+      };
+      preformSow(); // run it
+
+      this.commandPipeline.addCommand({
+        executeUndo: () => { // opposite / undo
+          plant.species = "none";
+          plant.growthLevel = 0;
+          this.plantManager.addPlantableCell(
+            selectedCellIndexAlias,
+            selectedCellAlias,
+          );
+          this.UIManager.updatePlantInfoUI(
+            selectedCellAlias.planterBox,
+          );
+        },
+        executeRedo: () => {
+          preformSow(); // sow it again
+        },
+      });
     } else {
       console.log("Plant not selected");
     }
