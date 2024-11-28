@@ -6,6 +6,7 @@ import UIManager from "../controller/UIController.ts";
 import TimeManager from "../controller/TimeController.ts";
 import GameManager from "../controller/GameManager.ts";
 import CommandPipeline from "../controller/CommandPipeline.ts";
+import { loadGameState, saveGameState } from "../util/Storage.ts";
 
 export default class Play extends Phaser.Scene {
   private player!: Player;
@@ -25,13 +26,14 @@ export default class Play extends Phaser.Scene {
     this.plantManager = new PlantManager(this);
     this.UIManager = new UIManager(this);
     this.TimeManager = new TimeManager(this);
+    this.commandPipeline = new CommandPipeline();
     this.gameManager = new GameManager(
       this,
       this.plantManager,
       this.UIManager,
       this.TimeManager,
+      this.commandPipeline,
     );
-    this.commandPipeline = new CommandPipeline();
 
     document.getElementById("undoBtn")?.addEventListener(
       "click",
@@ -109,29 +111,37 @@ export default class Play extends Phaser.Scene {
       }
     });
 
-    // TODO FIX
-    // whenever the game state moves forward we want to save the previous board state so we can undo
     this.events.on("gameStateAdvance", (arg: Cell[]) => {
       this.commandPipeline.addCommand({
         executeUndo: () => {
+          console.log("Undoing turn...");
           let count = 0;
           for (const cell of arg) {
-            console.log(cell);
             this.plantManager.addPlantableCell(count, cell);
             count += 1;
           }
-          // something something turn counter decrement
-          // something something reverse time ? lol
+          this.gameManager.turnCounter -= 1;
+          this.UIManager.setTurnText(this.gameManager.turnCounter.toString());
           if (this.gameManager.selectedCell) {
             this.UIManager.updatePlantInfoUI(
-              this.gameManager.selectedCell.planterBox,
+              this.plantManager
+                .getAllPlantableCells()[this.gameManager.selectedCellIndex]
+                .planterBox,
             );
           }
         },
         executeRedo: () => {
-          this.events.emit("newTurnEvent"); // TODO this is busted
+          this.events.emit("newTurnEvent", () => {
+            console.log("Redoing turn.");
+          });
+          this.gameManager.turnCounter += 1;
+          this.UIManager.setTurnText(this.gameManager.turnCounter.toString());
         },
       });
+    });
+
+    this.events.emit("newTurnEvent", () => {
+      this.gameManager.advanceTurn();
     });
 
     // if a new game exists then we need to go through all the cells and set them up

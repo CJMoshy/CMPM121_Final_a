@@ -61,11 +61,6 @@ interface GameState {
   plantData: Array<number>; // will become array buffer
 }
 
-interface ICommandPipeline {
-  undo: () => void;
-  redo: () => void;
-}
-
 interface AbstractGameCommand {
   executeUndo: () => void;
   executeRedo: () => void;

@@ -2,12 +2,14 @@ import PlantManager from "./PlantController.ts";
 import UIManager from "./UIController.ts";
 import TimeManager from "./TimeController.ts";
 import { loadGameState, saveGameState } from "../util/Storage.ts";
+import CommandPipeline from "./CommandPipeline.ts";
 
 export default class GameManager {
   private scene: Phaser.Scene;
   private plantManager: PlantManager;
   private UIManager: UIManager;
   private TimeManager: TimeManager;
+  private CommandPipeline: CommandPipeline;
   public selectedCell!: Cell | undefined;
   public selectedCellIndex: number = 0;
   private currentLevel!: number;
@@ -19,11 +21,13 @@ export default class GameManager {
     plantManager: PlantManager,
     UIManager: UIManager,
     TimeManager: TimeManager,
+    CommandPipeline: CommandPipeline,
   ) {
     this.scene = scene;
     this.plantManager = plantManager;
     this.UIManager = UIManager;
     this.TimeManager = TimeManager;
+    this.CommandPipeline = CommandPipeline;
     this.savedGameSlot = 1;
 
     // query the html and get the dropdown of what save
@@ -56,6 +60,14 @@ export default class GameManager {
     this.savedGameSlot = slot;
   }
 
+  getLevel() {
+    return this.currentLevel;
+  }
+
+  setLevel(level: number) {
+    this.currentLevel = level;
+  }
+
   initGame() {
     this.scene.events.on("nextTurnEvent", () => this.advanceTurn());
     // set up game
@@ -75,6 +87,7 @@ export default class GameManager {
       currentTurn: this.turnCounter,
       plantData: Array.from(toByteArr),
     }, this.savedGameSlot); // pass in a 'slot' to save different instances of the game
+    //this.CommandPipeline.saveToLocalStorage();
   }
 
   // load game from local storage
@@ -90,6 +103,7 @@ export default class GameManager {
       ) as [number, number, ArrayBuffer];
       this.plantManager.setPlantableCellBuffer(plantData); // set all the cells to the loaded data
     }
+    //this.CommandPipeline.loadFromLocalStorage();
   }
 
   // logic for advancing turn
