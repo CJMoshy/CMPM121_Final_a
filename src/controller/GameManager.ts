@@ -164,10 +164,10 @@ export default class GameManager {
         return;
       }
 
-      // Find the plantable cells that match the species name (e.g., "Flytrap")
+      // Find the plantable cells that match the species name (e.g., "Flytrap") and are of the right growth
       const matchingCells =
         this.plantManager.getAllPlantableCells().filter((e) =>
-          e.planterBox.plant.species === species
+          e.planterBox.plant.species === species && e.planterBox.plant.growthLevel == x.growthLevel
         ).length;
 
       if (matchingCells < x.amount) {

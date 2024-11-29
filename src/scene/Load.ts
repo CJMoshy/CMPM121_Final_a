@@ -8,12 +8,15 @@ import Undobutton from "../../assets/turnButton/undoButton.png";
 import RedoButton from "../../assets/turnButton/redoButton.png";
 import Aloe0 from "../../assets/plants/aloeLevel0.png";
 import Aloe1 from "../../assets/plants/aloeLevel1.png";
+import Aloe2 from "../../assets/plants/aloeLevel2.png";
 import Aloe3 from "../../assets/plants/aloeLevel3.png";
 import Flytrap0 from "../../assets/plants/flytrapLevel0.png";
 import Flytrap1 from "../../assets/plants/flytrapLevel1.png";
+import Flytrap2 from "../../assets/plants/flytrapLevel2.png";
 import Flytrap3 from "../../assets/plants/flytrapLevel3.png";
 import Wheat0 from "../../assets/plants/wheatLevel0.png";
 import Wheat1 from "../../assets/plants/wheatLevel1.png";
+import Wheat2 from "../../assets/plants/wheatLevel2.png";
 import Wheat3 from "../../assets/plants/wheatLevel3.png";
 
 import Blank from "../../assets/plants/blank.png";
@@ -57,13 +60,16 @@ export default class Load extends Phaser.Scene {
 
     this.load.image("Aloe VeraLevel0", Aloe0);
     this.load.image("Aloe VeraLevel1", Aloe1);
-    this.load.image("Aloe VeraLevel2", Aloe3);
+    this.load.image("Aloe VeraLevel2", Aloe2);
+    this.load.image("Aloe VeraLevel3", Aloe3);
     this.load.image("FlytrapLevel0", Flytrap0);
     this.load.image("FlytrapLevel1", Flytrap1);
-    this.load.image("FlytrapLevel2", Flytrap3);
+    this.load.image("FlytrapLevel2", Flytrap2);
+    this.load.image("FlytrapLevel3", Flytrap3);
     this.load.image("WheatLevel0", Wheat0);
     this.load.image("WheatLevel1", Wheat1);
-    this.load.image("WheatLevel2", Wheat3);
+    this.load.image("WheatLevel2", Wheat2);
+    this.load.image("WheatLevel3", Wheat3);
     this.load.image("blank", Blank);
 
     this.load.json("scenario", scenario);
