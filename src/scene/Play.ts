@@ -155,7 +155,6 @@ export default class Play extends Phaser.Scene {
             plant: {
               species: "none",
               growthLevel: plantGrowthLevel.seedling,
-              // sprite: "blank"
             },
           },
         }
@@ -253,6 +252,10 @@ export default class Play extends Phaser.Scene {
       executeUndo: () => { // this is the opposite of reaping. its not sowing because in the future if we tie more logic into sow we could be potentially losing seeds etc...
         plant.species = plantAlias.species;
         plant.growthLevel = plantAlias.growthLevel;
+
+        //set sprite to the sapling of the species
+        this.plantManager.updateSprite(selectedCellAlias.i, selectedCellAlias.j, plant.species + "Level" + plant.growthLevel);
+        
         this.plantManager.addPlantableCell(
           selectedCellIndexAlias,
           selectedCellAlias,
@@ -295,8 +298,8 @@ export default class Play extends Phaser.Scene {
         plant.species = selectedRadio
           .value as PlantSpecies;
       
-      //set sprite to the sapling of the species
-      this.plantManager.updateSprite(selectedCellAlias.i, selectedCellAlias.j, plant.species + "Level0");
+        //set sprite to the sapling of the species
+        this.plantManager.updateSprite(selectedCellAlias.i, selectedCellAlias.j, plant.species + "Level0");
 
         this.plantManager.addPlantableCell(
           selectedCellIndexAlias,
@@ -312,6 +315,9 @@ export default class Play extends Phaser.Scene {
         executeUndo: () => { // opposite / undo
           plant.species = "none";
           plant.growthLevel = 0;
+
+      //set sprite to the sapling of the species
+      this.plantManager.updateSprite(selectedCellAlias.i, selectedCellAlias.j, "blank");
           this.plantManager.addPlantableCell(
             selectedCellIndexAlias,
             selectedCellAlias,

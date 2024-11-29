@@ -31,12 +31,6 @@ export default class PlantManager {
     return "whoops";
   }
 
-  // displayAllSprites(){
-  //   this.plantSpriteMap.forEach((coord) => {
-
-  //   });
-  // }
-
   updateSprite(i: number, j: number, sprite: string){
     const coord: string = i+","+j;
     if(this.plantSpriteMap.has(coord)){
