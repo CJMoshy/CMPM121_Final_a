@@ -73,7 +73,7 @@ export default class UIManager {
         "undoButton",
         0
       )
-      .setScale(3).on("pointerdown", () => this.undo);;
+      .setScale(3).setInteractive().on("pointerdown", () => this.undo());
 
     this.redoBtn = this.scene.add
       .sprite(
@@ -84,7 +84,7 @@ export default class UIManager {
         "redoButton",
         0
       )
-      .setScale(3).on("pointerdown", () => this.redo);
+      .setScale(3).setInteractive().on("pointerdown", () => this.redo());
   }
 
   setTurnText(turnCounter: string) {
@@ -178,10 +178,12 @@ export default class UIManager {
   }
 
   undo(){
-
+    this.scene.events.emit("undoEvent");
+    // console.log("Undo Button pressed");
   }
 
   redo(){
-
+    this.scene.events.emit("redoEvent");
+    // console.log("Redo Button pressed");
   }
 }

@@ -204,6 +204,9 @@ export default class Play extends Phaser.Scene {
 
     this.events.on("reapEvent", () => this.reap());
     this.events.on("sowEvent", () => this.sow());
+
+    this.events.on("undoEvent", () => this.commandPipeline.undo());
+    this.events.on("redoEvent", () => this.commandPipeline.redo());
   }
 
   //deno-lint-ignore no-unused-vars
@@ -255,7 +258,7 @@ export default class Play extends Phaser.Scene {
 
         //set sprite to the sapling of the species
         this.plantManager.updateSprite(selectedCellAlias.i, selectedCellAlias.j, plant.species + "Level" + plant.growthLevel);
-        
+
         this.plantManager.addPlantableCell(
           selectedCellIndexAlias,
           selectedCellAlias,
