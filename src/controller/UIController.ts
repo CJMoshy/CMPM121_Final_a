@@ -51,10 +51,10 @@ export default class UIManager {
     ).setScale(1.5).setOrigin(0.5).setAlpha(0);
 
     this.reapBtn = this.scene.add.sprite(TEXT_X - 200, TEXT_Y + 75, "player", 0)
-      .setAlpha(0).on("pointerdown", () => this.reap());
+      .setAlpha(0).on("pointerdown", () => this.advanceGame("reap"));
 
     this.sowBtn = this.scene.add.sprite(TEXT_X + 200, TEXT_Y + 75, "player", 0)
-      .setAlpha(0).on("pointerdown", () => this.sow());
+      .setAlpha(0).on("pointerdown", () => this.advanceGame("sow"));
   }
 
   setTurnText(turnCounter: string) {
@@ -85,15 +85,18 @@ export default class UIManager {
     });
   }
 
-  reap() {
-    this.scene.events.emit("reapEvent");
-    console.log("Reap button pressed");
+  advanceGame(action: string) {
+    this.scene.events.emit("gameStateAdvance", action);
   }
+  // reap() {
+  //   this.scene.events.emit("reapEvent");
+  //   console.log("Reap button pressed");
+  // }
 
-  sow() {
-    this.scene.events.emit("sowEvent");
-    console.log("Sow button pressed");
-  }
+  // sow() {
+  //   this.scene.events.emit("sowEvent");
+  //   console.log("Sow button pressed");
+  // }
 
   updatePlantInfoUI(plantData: PlanterBox) {
     this.writingText.setText(
