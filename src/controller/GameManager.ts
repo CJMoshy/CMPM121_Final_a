@@ -136,6 +136,7 @@ export default class GameManager {
 
     // Update UI
     this.UIManager.setTurnText(loadedTurn.toString());
+    this.scene.events.emit("loadGameSprites");
     console.log(`Game state loaded from slot ${this.savedGameSlot}`);
   }
 

@@ -47,6 +47,7 @@ export default class Play extends Phaser.Scene {
       "click",
       () => {
         this.gameManager.loadGameFromSlot();
+        this.UIManager.updateTextTween(this.player.x, this.player.y, "Load Game");
       },
     );
   }
@@ -141,6 +142,7 @@ export default class Play extends Phaser.Scene {
                 .planterBox,
             );
           }
+        this.events.emit("loadGameSprites");
         },
         executeRedo: () => {
           this.events.emit("newTurnEvent", () => {
@@ -148,6 +150,7 @@ export default class Play extends Phaser.Scene {
           });
           this.gameManager.turnCounter += 1;
           this.UIManager.setTurnText(this.gameManager.turnCounter.toString());
+          this.events.emit("loadGameSprites");
         },
       });
     });
@@ -191,6 +194,9 @@ export default class Play extends Phaser.Scene {
         if(plantSprite != "none"){
           this.plantManager.updateSprite((Math.floor(element.x as number)), (Math.floor(element.y as number)), plantSprite+"Level"+plantableCell?.planterBox.plant.growthLevel);
         }
+        else{
+          this.plantManager.updateSprite((Math.floor(element.x as number)), (Math.floor(element.y as number)), "blank");
+        }
       });
     });
 
@@ -220,8 +226,14 @@ export default class Play extends Phaser.Scene {
     this.events.on("reapEvent", () => this.reap());
     this.events.on("sowEvent", () => this.sow());
 
-    this.events.on("undoEvent", () => this.commandPipeline.undo());
-    this.events.on("redoEvent", () => this.commandPipeline.redo());
+    this.events.on("undoEvent", () => {
+      this.commandPipeline.undo()
+      this.UIManager.updateTextTween(this.player.x, this.player.y, "Undo");
+    });
+    this.events.on("redoEvent", () => {
+      this.commandPipeline.redo()
+      this.UIManager.updateTextTween(this.player.x, this.player.y, "Redo");
+    });
   }
 
   //deno-lint-ignore no-unused-vars
@@ -334,8 +346,8 @@ export default class Play extends Phaser.Scene {
           plant.species = "none";
           plant.growthLevel = 0;
 
-      //set sprite to the sapling of the species
-      this.plantManager.updateSprite(selectedCellAlias.i, selectedCellAlias.j, "blank");
+          //set sprite to the sapling of the species
+          this.plantManager.updateSprite(selectedCellAlias.i, selectedCellAlias.j, "blank");
           this.plantManager.addPlantableCell(
             selectedCellIndexAlias,
             selectedCellAlias,

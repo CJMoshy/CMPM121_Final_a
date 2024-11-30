@@ -10,6 +10,7 @@ export default class UIManager {
   private turnBtn!: Phaser.GameObjects.Image;
   private undoBtn!: Phaser.GameObjects.Sprite;
   private redoBtn!: Phaser.GameObjects.Sprite;
+  private updateText!: Phaser.GameObjects.Text;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -85,6 +86,8 @@ export default class UIManager {
         0
       )
       .setScale(3).setInteractive().on("pointerdown", () => this.redo());
+
+    this.updateText = this.scene.add.text(0, 0, "").setAlpha(0).setScale(2).setOrigin(0.5, 0.5);
   }
 
   setTurnText(turnCounter: string) {
@@ -112,10 +115,23 @@ export default class UIManager {
       alpha: { from: 1, to: 0 },
       duration: 500,
       onComplete: () => {
+        this.reapBtn.setAlpha(0);
+        this.sowBtn.setAlpha(0);
         this.reapBtn.setInteractive(false);
         this.sowBtn.setInteractive(false);
       },
     });
+  }
+
+  updateTextTween(x: number, y: number, text: string){
+    this.updateText.setText(text);
+    this.scene.add.tween({
+      targets: [this.updateText],
+      alpha: {from:1, to: 0},
+      x: {from: x, to: x},
+      y: {from: y - 50, to: y - 100},
+      duration: 500,
+    })
   }
 
   reap() {
@@ -136,10 +152,13 @@ export default class UIManager {
         Growth: ${plantData.plant.growthLevel}`,
     ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
 
-    this.reapBtn.setAlpha(1);
-    this.sowBtn.setAlpha(1);
-    this.reapBtn.setInteractive();
-    this.sowBtn.setInteractive();
+    // shows buttons only if box is shown
+    if(this.writingBox.alpha != 0){
+      this.reapBtn.setAlpha(1);
+      this.sowBtn.setAlpha(1);
+      this.reapBtn.setInteractive();
+      this.sowBtn.setInteractive();
+    }
   }
 
   initLevelRequirements() {
