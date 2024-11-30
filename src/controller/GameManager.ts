@@ -2,12 +2,14 @@ import PlantManager from "./PlantController.ts";
 import UIManager from "./UIController.ts";
 import TimeManager from "./TimeController.ts";
 import { loadGameState, saveGameState } from "../util/Storage.ts";
+import CommandPipeline from "./CommandPipeline.ts";
 
 export default class GameManager {
   private scene: Phaser.Scene;
   private plantManager: PlantManager;
   private UIManager: UIManager;
   private TimeManager: TimeManager;
+  private CommandPipeline: CommandPipeline;
   public selectedCell!: Cell | undefined;
   public selectedCellIndex: number = 0;
   private currentLevel!: number;
@@ -19,11 +21,13 @@ export default class GameManager {
     plantManager: PlantManager,
     UIManager: UIManager,
     TimeManager: TimeManager,
+    CommandPipeline: CommandPipeline,
   ) {
     this.scene = scene;
     this.plantManager = plantManager;
     this.UIManager = UIManager;
     this.TimeManager = TimeManager;
+    this.CommandPipeline = CommandPipeline;
     this.savedGameSlot = 1;
 
     // query the html and get the dropdown of what save
@@ -56,6 +60,14 @@ export default class GameManager {
     this.savedGameSlot = slot;
   }
 
+  getLevel() {
+    return this.currentLevel;
+  }
+
+  setLevel(level: number) {
+    this.currentLevel = level;
+  }
+
   initGame() {
     this.scene.events.on("nextTurnEvent", () => this.advanceTurn());
     // set up game
@@ -75,6 +87,7 @@ export default class GameManager {
       currentTurn: this.turnCounter,
       plantData: Array.from(toByteArr),
     }, this.savedGameSlot); // pass in a 'slot' to save different instances of the game
+    //this.CommandPipeline.saveToLocalStorage();
   }
 
   // load game from local storage
@@ -91,6 +104,39 @@ export default class GameManager {
       this.plantManager.setPlantableCellBuffer(plantData); // set all the cells to the loaded data
       this.scene.events.emit("loadGameSprites");
     }
+    //this.CommandPipeline.loadFromLocalStorage();
+  }
+
+  //this is not the local storage but loading from the save slots
+  loadGameFromSlot() {
+    const loadedState = loadGameState(this.savedGameSlot);
+    // Destructure the loaded state
+
+    if (loadedState === false) {
+      //make a new game as seen in loadSavedGame
+      console.log(
+        `No saved game found in slot ${this.savedGameSlot}, initializing a new save.`,
+      );
+      this.scene.events.emit("newGameEvent");
+      this.turnCounter = 1;
+      this.currentLevel = 1;
+      //reset the UI Manager and text
+      this.UIManager.setTurnText(this.turnCounter.toString());
+      // Load the save in the slot
+      loadGameState(this.savedGameSlot);
+      return;
+    }
+
+    const [loadedLevel, loadedTurn, loadedPlantBuffer] = loadedState;
+
+    // Update game objects
+    this.currentLevel = loadedLevel;
+    this.turnCounter = loadedTurn;
+    this.plantManager.setPlantableCellBuffer(loadedPlantBuffer);
+
+    // Update UI
+    this.UIManager.setTurnText(loadedTurn.toString());
+    console.log(`Game state loaded from slot ${this.savedGameSlot}`);
   }
 
   // logic for advancing turn
