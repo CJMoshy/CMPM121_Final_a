@@ -57,15 +57,15 @@ export default class UIManager {
       .sprite(TEXT_X - 200, TEXT_Y + 75, "reapButton", 0)
       .setAlpha(0)
       .setScale(3)
-      .on("pointerdown", () => this.reap());
+      .on("pointerdown", () => this.advanceGame("reap"));
 
-    this.sowBtn = this.scene.add
+      this.sowBtn = this.scene.add
       .sprite(TEXT_X + 200, TEXT_Y + 75, "sowButton", 0)
       .setAlpha(0)
       .setScale(3)
-      .on("pointerdown", () => this.sow());
+      .on("pointerdown", () => this.advanceGame("sow"));
 
-    this.undoBtn = this.scene.add
+      this.undoBtn = this.scene.add
       .sprite(
         GAME_CONFIG.UI.BORDER_PADDING,
         (this.scene.game.config.height as number) -
@@ -134,15 +134,19 @@ export default class UIManager {
     })
   }
 
-  reap() {
-    this.scene.events.emit("reapEvent");
-    console.log("Reap button pressed");
+  advanceGame(action: string) {
+    this.scene.events.emit("gameStateAdvance", action);
+    this.scene.events.emit("loadGameSprites");
   }
+  // reap() {
+  //   this.scene.events.emit("reapEvent");
+  //   console.log("Reap button pressed");
+  // }
 
-  sow() {
-    this.scene.events.emit("sowEvent");
-    console.log("Sow button pressed");
-  }
+  // sow() {
+  //   this.scene.events.emit("sowEvent");
+  //   console.log("Sow button pressed");
+  // }
 
   updatePlantInfoUI(plantData: PlanterBox) {
     this.writingText.setText(

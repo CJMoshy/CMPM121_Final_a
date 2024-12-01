@@ -38,7 +38,7 @@ interface PlantsData {
 }
 
 interface PlantRequirement {
-  ammount: number;
+  amount: number;
   growthLevel: number;
 }
 
@@ -65,3 +65,9 @@ interface AbstractGameCommand {
   executeUndo: () => void;
   executeRedo: () => void;
 }
+
+type executeUndo = string;
+type executeRedo = string;
+type undoFunc = string;
+type redoFunc = string;
+type CommandPipelineSave = [[executeUndo, undoFunc], [executeRedo, redoFunc]];
