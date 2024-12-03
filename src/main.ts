@@ -17,7 +17,7 @@ const PHASER_CONFIG = {
   physics: {
     default: "arcade",
     arcade: {
-      debug: true,
+      // debug: true,
     },
   },
   // zoom: 4,
