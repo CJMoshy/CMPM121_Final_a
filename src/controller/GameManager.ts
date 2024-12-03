@@ -1,7 +1,6 @@
 import PlantManager from "./PlantController.ts";
 import UIManager from "./UIController.ts";
 import TimeManager from "./TimeController.ts";
-import CommandPipeline from "./CommandPipeline.ts";
 import { loadGameState, saveGameState } from "../util/Storage.ts";
 import Action from "./Action.ts";
 

@@ -1,53 +1,61 @@
 import Phaser from "phaser";
 
-const Player = getAssetUrl("../../assets/player/player.png");
-const TurnButton = getAssetUrl("../../assets/turnButton/turnButton.png");
-const ReapButton = getAssetUrl("../../assets/turnButton/reapButton.png");
-const SowButton = getAssetUrl("../../assets/turnButton/sowButton.png");
-const UndoButton = getAssetUrl("../../assets/turnButton/undoButton.png");
-const RedoButton = getAssetUrl("../../assets/turnButton/redoButton.png");
-const Aloe0 = getAssetUrl("../../assets/plants/aloeLevel0.png");
-const Aloe1 = getAssetUrl("../../assets/plants/aloeLevel1.png");
-const Aloe2 = getAssetUrl("../../assets/plants/aloeLevel2.png");
-const Aloe3 = getAssetUrl("../../assets/plants/aloeLevel3.png");
-const Flytrap0 = getAssetUrl("../../assets/plants/flytrapLevel0.png");
-const Flytrap1 = getAssetUrl("../../assets/plants/flytrapLevel1.png");
-const Flytrap2 = getAssetUrl("../../assets/plants/flytrapLevel2.png");
-const Flytrap3 = getAssetUrl("../../assets/plants/flytrapLevel3.png");
-const Wheat0 = getAssetUrl("../../assets/plants/wheatLevel0.png");
-const Wheat1 = getAssetUrl("../../assets/plants/wheatLevel1.png");
-const Wheat2 = getAssetUrl("../../assets/plants/wheatLevel2.png");
-const Wheat3 = getAssetUrl("../../assets/plants/wheatLevel3.png");
-const Blank = getAssetUrl("../../assets/plants/blank.png");
+// USE THESE FOR PROD
+const Player = getAssetUrl("./player/player.png");
+const TurnButton = getAssetUrl("./turnButton/turnButton.png");
+const ReapButton = getAssetUrl("./turnButton/reapButton.png");
+const SowButton = getAssetUrl("./turnButton/sowButton.png");
+const UndoButton = getAssetUrl("./turnButton/undoButton.png");
+const RedoButton = getAssetUrl("./turnButton/redoButton.png");
+const Aloe0 = getAssetUrl("./plants/aloeLevel0.png");
+const Aloe1 = getAssetUrl("./plants/aloeLevel1.png");
+const Aloe2 = getAssetUrl("./plants/aloeLevel2.png");
+const Aloe3 = getAssetUrl("./plants/aloeLevel3.png");
+const Flytrap0 = getAssetUrl("./plants/flytrapLevel0.png");
+const Flytrap1 = getAssetUrl("./plants/flytrapLevel1.png");
+const Flytrap2 = getAssetUrl("./plants/flytrapLevel2.png");
+const Flytrap3 = getAssetUrl("./plants/flytrapLevel3.png");
+const Wheat0 = getAssetUrl("./plants/wheatLevel0.png");
+const Wheat1 = getAssetUrl("./plants/wheatLevel1.png");
+const Wheat2 = getAssetUrl("./plants/wheatLevel2.png");
+const Wheat3 = getAssetUrl("./plants/wheatLevel3.png");
+const Blank = getAssetUrl("./plants/blank.png");
+const tilemap = getAssetUrl("./tilemap/Farm.png");
+const outline = getAssetUrl("./outline.png");
+const textBox = getAssetUrl("./DialogueBox.png");
 
-// import ReapButton from "../../assets/turnButton/reapButton.png";
-// import SowButton from "../../assets/turnButton/sowButton.png";
-// import Undobutton from "../../assets/turnButton/undoButton.png";
-// import RedoButton from "../../assets/turnButton/redoButton.png";
-// import Aloe0 from "../../assets/plants/aloeLevel0.png";
-// import Aloe1 from "../../assets/plants/aloeLevel1.png";
-// import Aloe2 from "../../assets/plants/aloeLevel2.png";
-// import Aloe3 from "../../assets/plants/aloeLevel3.png";
-// import Flytrap0 from "../../assets/plants/flytrapLevel0.png";
-// import Flytrap1 from "../../assets/plants/flytrapLevel1.png";
-// import Flytrap2 from "../../assets/plants/flytrapLevel2.png";
-// import Flytrap3 from "../../assets/plants/flytrapLevel3.png";
-// import Wheat0 from "../../assets/plants/wheatLevel0.png";
-// import Wheat1 from "../../assets/plants/wheatLevel1.png";
-// import Wheat2 from "../../assets/plants/wheatLevel2.png";
-// import Wheat3 from "../../assets/plants/wheatLevel3.png";
-// import Blank from "../../assets/plants/blank.png";
+// USE THESE FOR DEV
+// const Player = getAssetUrl("/assets/player/player.png");
+// const TurnButton = getAssetUrl("/assets/turnButton/turnButton.png");
+// const ReapButton = getAssetUrl("/assets/turnButton/reapButton.png");
+// const SowButton = getAssetUrl("/assets/turnButton/sowButton.png");
+// const UndoButton = getAssetUrl("/assets/turnButton/undoButton.png");
+// const RedoButton = getAssetUrl("/assets/turnButton/redoButton.png");
+// const Aloe0 = getAssetUrl("/assets/plants/aloeLevel0.png");
+// const Aloe1 = getAssetUrl("/assets/plants/aloeLevel1.png");
+// const Aloe2 = getAssetUrl("/assets/plants/aloeLevel2.png");
+// const Aloe3 = getAssetUrl("/assets/plants/aloeLevel3.png");
+// const Flytrap0 = getAssetUrl("/assets/plants/flytrapLevel0.png");
+// const Flytrap1 = getAssetUrl("/assets/plants/flytrapLevel1.png");
+// const Flytrap2 = getAssetUrl("/assets/plants/flytrapLevel2.png");
+// const Flytrap3 = getAssetUrl("/assets/plants/flytrapLevel3.png");
+// const Wheat0 = getAssetUrl("/assets/plants/wheatLevel0.png");
+// const Wheat1 = getAssetUrl("/assets/plants/wheatLevel1.png");
+// const Wheat2 = getAssetUrl("/assets/plants/wheatLevel2.png");
+// const Wheat3 = getAssetUrl("/assets/plants/wheatLevel3.png");
+// const Blank = getAssetUrl("/assets/plants/blank.png");
+// const tilemap = getAssetUrl("/assets/tilemap/Farm.png");
+// const outline = getAssetUrl("/assets/outline.png");
+// const textBox = getAssetUrl("/assets/DialogueBox.png");
 
-import PlayerJson from "../../assets/player/player-walk-anims.json" with {
+import PlayerJson from "../util/json/player-walk-anims.json" with {
   type: "json",
 };
 
-const tilemap = getAssetUrl("../../assets/tilemap/Farm.png");
-import tilemapJSON from "../../assets/tilemap/FarmTilemap.json" with {
+import tilemapJSON from "../util/json/FarmTilemap.json" with {
   type: "json",
 };
-const outline = getAssetUrl("../../assets/outline.png");
-const textBox = getAssetUrl("../../assets/DialogueBox.png");
+
 import scenario from "../util/gameLogic/scenario.json" with {
   type: "json",
 };

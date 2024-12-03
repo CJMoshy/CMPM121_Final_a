@@ -35,14 +35,6 @@ export default class Play extends Phaser.Scene {
 
     this.commandPipeline = new CommandPipeline(this.gameManager);
 
-    document.getElementById("undoBtn")?.addEventListener(
-      "click",
-      () => this.events.emit("undoEvent"),
-    );
-    document.getElementById("redoBtn")?.addEventListener(
-      "click",
-      () => this.events.emit("redoEvent"),
-    );
     document.getElementById("loadBtn")?.addEventListener(
       "click",
       () => {
