@@ -2,7 +2,7 @@ import Phaser from "phaser";
 
 const Player = getAssetUrl("../../assets/player/player.png");
 const TurnButton = getAssetUrl("../../assets/turnButton/turnButton.png");
-const ReapButton = getAssetUrl("../../assets/turnButton/reapButton.png")
+const ReapButton = getAssetUrl("../../assets/turnButton/reapButton.png");
 const SowButton = getAssetUrl("../../assets/turnButton/sowButton.png");
 const UndoButton = getAssetUrl("../../assets/turnButton/undoButton.png");
 const RedoButton = getAssetUrl("../../assets/turnButton/redoButton.png");

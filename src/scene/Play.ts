@@ -26,34 +26,38 @@ export default class Play extends Phaser.Scene {
     this.plantManager = new PlantManager(this);
     this.UIManager = new UIManager(this);
     this.TimeManager = new TimeManager(this);
-    this.commandPipeline = new CommandPipeline();
     this.gameManager = new GameManager(
       this,
       this.plantManager,
       this.UIManager,
       this.TimeManager,
-      this.commandPipeline,
     );
 
     this.commandPipeline = new CommandPipeline(this.gameManager);
 
     document.getElementById("undoBtn")?.addEventListener(
       "click",
-      () => this.events.emit("undoEvent"));
-      document.getElementById("redoBtn")?.addEventListener(
-        "click",
-        () => this.events.emit("redoEvent"));
+      () => this.events.emit("undoEvent"),
+    );
+    document.getElementById("redoBtn")?.addEventListener(
+      "click",
+      () => this.events.emit("redoEvent"),
+    );
     document.getElementById("loadBtn")?.addEventListener(
       "click",
       () => {
         this.gameManager.loadGameFromSlot();
         this.gameManager.selectedCell = undefined;
-        this.player.setX(this.game.config.width as number / 2)
-        this.player.setY(this.game.config.height as number / 2 - 64)
-        if(this.UIWindowOpen){
+        this.player.setX(this.game.config.width as number / 2);
+        this.player.setY(this.game.config.height as number / 2 - 64);
+        if (this.UIWindowOpen) {
           this.UIManager.closeWindow();
         }
-        this.UIManager.updateTextTween(this.player.x, this.player.y, "Load Game");
+        this.UIManager.updateTextTween(
+          this.player.x,
+          this.player.y,
+          "Load Game",
+        );
       },
     );
   }
@@ -89,7 +93,10 @@ export default class Play extends Phaser.Scene {
     //initialize/adding sprites for all tiles, sprites will get set later so only added once
     const iterableDirt = map.getObjectLayer("Plantable")!;
     iterableDirt.objects.forEach((element) => {
-      this.plantManager.initSprite(Math.floor(element.x as number), Math.floor(element.y as number))
+      this.plantManager.initSprite(
+        Math.floor(element.x as number),
+        Math.floor(element.y as number),
+      );
     });
 
     dirtLayer?.on("pointermove", () => {
@@ -135,7 +142,7 @@ export default class Play extends Phaser.Scene {
       const iterableDirt = map.getObjectLayer("Plantable")!;
       let count = 0;
       iterableDirt.objects.forEach((element) => {
-        const cell:Cell = {
+        const cell: Cell = {
           i: Math.floor(element.x as number),
           j: Math.floor(element.y as number),
           planterBox: {
@@ -146,11 +153,15 @@ export default class Play extends Phaser.Scene {
               growthLevel: plantGrowthLevel.seedling,
             },
           },
-        }
+        };
         this.plantManager.addPlantableCell(count, cell);
 
         //set all sprites to blank
-        this.plantManager.updateSprite((Math.floor(element.x as number)), (Math.floor(element.y as number)), "blank");
+        this.plantManager.updateSprite(
+          Math.floor(element.x as number),
+          Math.floor(element.y as number),
+          "blank",
+        );
         count += 1;
       });
     });
@@ -160,13 +171,23 @@ export default class Play extends Phaser.Scene {
       iterableDirt.objects.forEach((element) => {
         const plantableCell = this.plantManager.getAllPlantableCells().find((
           cell,
-        ) => cell.i === Math.floor(element.x as number) && cell.j === Math.floor(element.y as number));
+        ) =>
+          cell.i === Math.floor(element.x as number) &&
+          cell.j === Math.floor(element.y as number)
+        );
         const plantSprite = plantableCell?.planterBox.plant.species;
-        if(plantSprite != "none"){
-          this.plantManager.updateSprite((Math.floor(element.x as number)), (Math.floor(element.y as number)), plantSprite+"Level"+plantableCell?.planterBox.plant.growthLevel);
-        }
-        else{
-          this.plantManager.updateSprite((Math.floor(element.x as number)), (Math.floor(element.y as number)), "blank");
+        if (plantSprite != "none") {
+          this.plantManager.updateSprite(
+            Math.floor(element.x as number),
+            Math.floor(element.y as number),
+            plantSprite + "Level" + plantableCell?.planterBox.plant.growthLevel,
+          );
+        } else {
+          this.plantManager.updateSprite(
+            Math.floor(element.x as number),
+            Math.floor(element.y as number),
+            "blank",
+          );
         }
       });
     });
@@ -219,36 +240,40 @@ export default class Play extends Phaser.Scene {
     });
 
     this.events.on("undoEvent", () => {
-      this.commandPipeline.undo()
+      this.commandPipeline.undo();
       this.UIManager.updateTextTween(this.player.x, this.player.y, "Undo");
       this.events.emit("updateUndoRedo");
-      }
-    );
+    });
     this.events.on("redoEvent", () => {
-      this.commandPipeline.redo()
+      this.commandPipeline.redo();
       this.UIManager.updateTextTween(this.player.x, this.player.y, "Redo");
       this.events.emit("updateUndoRedo");
-      }
-    );
+    });
 
     this.events.on("updateUndoRedo", () => {
       this.events.emit("loadGameSprites");
       // console.log(this.gameManager.selectedCell?.planterBox);
-      if(this.gameManager.selectedCell){
-          const plantableCell = this.plantManager.getAllPlantableCells().find((
+      if (this.gameManager.selectedCell) {
+        const plantableCell = this.plantManager.getAllPlantableCells().find((
+          cell,
+        ) =>
+          cell.i === this.gameManager.selectedCell?.i &&
+          cell.j === this.gameManager.selectedCell?.j
+        );
+        const plantableCellIndex = this.plantManager.getAllPlantableCells()
+          .findIndex((
             cell,
-          ) => cell.i === this.gameManager.selectedCell?.i && cell.j === this.gameManager.selectedCell?.j);
-          const plantableCellIndex = this.plantManager.getAllPlantableCells()
-            .findIndex((
-              cell,
-            ) => cell.i === this.gameManager.selectedCell?.i && cell.j === this.gameManager.selectedCell?.j);
-          if (plantableCell) {
-            this.gameManager.selectedCell = plantableCell;
-            this.gameManager.selectedCellIndex = plantableCellIndex;
-            const plantData = plantableCell.planterBox;
-            this.UIManager.updatePlantInfoUI(plantData);
-          }
+          ) =>
+            cell.i === this.gameManager.selectedCell?.i &&
+            cell.j === this.gameManager.selectedCell?.j
+          );
+        if (plantableCell) {
+          this.gameManager.selectedCell = plantableCell;
+          this.gameManager.selectedCellIndex = plantableCellIndex;
+          const plantData = plantableCell.planterBox;
+          this.UIManager.updatePlantInfoUI(plantData);
         }
+      }
     });
   }
 
@@ -274,7 +299,11 @@ export default class Play extends Phaser.Scene {
       this.gameManager.selectedCellIndex,
       this.gameManager.selectedCell,
     );
-    this.plantManager.updateSprite(this.gameManager.selectedCell.i, this.gameManager.selectedCell.j, "blank"); // set sprite to blank
+    this.plantManager.updateSprite(
+      this.gameManager.selectedCell.i,
+      this.gameManager.selectedCell.j,
+      "blank",
+    ); // set sprite to blank
     this.UIManager.updatePlantInfoUI(this.gameManager.selectedCell.planterBox);
     console.log(plant);
   }
@@ -304,13 +333,18 @@ export default class Play extends Phaser.Scene {
         this.gameManager.selectedCellIndex,
         this.gameManager.selectedCell,
       );
-      this.plantManager.updateSprite(this.gameManager.selectedCell.i, this.gameManager.selectedCell.j, plant.species + "Level0"); // set sprite to blank
-      this.UIManager.updatePlantInfoUI(this.gameManager.selectedCell.planterBox);
+      this.plantManager.updateSprite(
+        this.gameManager.selectedCell.i,
+        this.gameManager.selectedCell.j,
+        plant.species + "Level0",
+      ); // set sprite to blank
+      this.UIManager.updatePlantInfoUI(
+        this.gameManager.selectedCell.planterBox,
+      );
     } else {
       console.log("no plant selected");
     }
   }
-  
 }
 
 //     // TODO FIX

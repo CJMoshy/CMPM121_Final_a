@@ -17,23 +17,26 @@ export default class PlantManager {
   }
 
   //adds sprites, only happens once ideally
-  initSprite(i: number, j: number){
-    const coord: string = i+","+j;
-    this.plantSpriteMap.set(coord, this.scene.add.sprite(i*4+30, j*4+30, "blank"));
+  initSprite(i: number, j: number) {
+    const coord: string = i + "," + j;
+    this.plantSpriteMap.set(
+      coord,
+      this.scene.add.sprite(i * 4 + 30, j * 4 + 30, "blank"),
+    );
   }
 
   //get the texture key, might not be needed
-  getSpriteKey(i: number, j: number): string{
-    const coord: string = i+","+j;
-    if(this.plantSpriteMap.has(coord)){
+  getSpriteKey(i: number, j: number): string {
+    const coord: string = i + "," + j;
+    if (this.plantSpriteMap.has(coord)) {
       return this.plantSpriteMap.get(coord)!.texture.key;
     }
     return "whoops";
   }
 
-  updateSprite(i: number, j: number, sprite: string){
-    const coord: string = i+","+j;
-    if(this.plantSpriteMap.has(coord)){
+  updateSprite(i: number, j: number, sprite: string) {
+    const coord: string = i + "," + j;
+    if (this.plantSpriteMap.has(coord)) {
       this.plantSpriteMap.get(coord)?.setTexture(sprite).setScale(2);
     }
   }
@@ -86,7 +89,12 @@ export default class PlantManager {
       cell.planterBox.plant.growthLevel++;
       cell.planterBox.sunLevel -= _required.sunlevel;
       cell.planterBox.waterLevel -= _required.waterlevel;
-      this.updateSprite(cell.i, cell.j, cell.planterBox.plant.species + "Level" + cell.planterBox.plant.growthLevel);
+      this.updateSprite(
+        cell.i,
+        cell.j,
+        cell.planterBox.plant.species + "Level" +
+          cell.planterBox.plant.growthLevel,
+      );
     }
   }
 

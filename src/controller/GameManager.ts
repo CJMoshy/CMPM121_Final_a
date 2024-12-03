@@ -1,6 +1,7 @@
 import PlantManager from "./PlantController.ts";
 import UIManager from "./UIController.ts";
 import TimeManager from "./TimeController.ts";
+import CommandPipeline from "./CommandPipeline.ts";
 import { loadGameState, saveGameState } from "../util/Storage.ts";
 import Action from "./Action.ts";
 
@@ -21,13 +22,11 @@ export default class GameManager {
     plantManager: PlantManager,
     UIManager: UIManager,
     TimeManager: TimeManager,
-    CommandPipeline: CommandPipeline,
   ) {
     this.scene = scene;
     this.plantManager = plantManager;
     this.UIManager = UIManager;
     this.TimeManager = TimeManager;
-    this.CommandPipeline = CommandPipeline;
     this.savedGameSlot = 1;
     this.loadGameSlot = 1;
     // query the html and get the dropdown of what save
@@ -91,7 +90,6 @@ export default class GameManager {
         new Uint8Array(this.plantManager.getPlantableCellBuffer()),
       ),
     }, this.savedGameSlot); // pass in a 'slot' to save different instances of the game
-    // this.commandPipeline.saveToLocalStorage()
   }
 
   // load game from local storage
@@ -108,7 +106,6 @@ export default class GameManager {
       this.plantManager.setPlantableCellBuffer(plantData); // set all the cells to the loaded data
       this.scene.events.emit("loadGameSprites");
     }
-    //this.CommandPipeline.loadFromLocalStorage();
   }
 
   //this is not the local storage but loading from the save slots
@@ -221,7 +218,12 @@ export default class GameManager {
         .find((e) => e.planterBox.plant.growthLevel === x.growthLevel);
 
       if (!hasMatchingGrowthLevel) {
-        this.UIManager.updateLevelRequirements(species, x.amount, x.growthLevel, 0);
+        this.UIManager.updateLevelRequirements(
+          species,
+          x.amount,
+          x.growthLevel,
+          0,
+        );
         console.log("no plant found at correct growth level ");
         return;
       }
@@ -229,11 +231,17 @@ export default class GameManager {
       // Find the plantable cells that match the species name (e.g., "Flytrap") and are of the right growth
       const matchingCells =
         this.plantManager.getAllPlantableCells().filter((e) =>
-          e.planterBox.plant.species === species && e.planterBox.plant.growthLevel == x.growthLevel
+          e.planterBox.plant.species === species &&
+          e.planterBox.plant.growthLevel == x.growthLevel
         ).length;
 
       if (matchingCells < x.amount) {
-        this.UIManager.updateLevelRequirements(species, x.amount, x.growthLevel, matchingCells);
+        this.UIManager.updateLevelRequirements(
+          species,
+          x.amount,
+          x.growthLevel,
+          matchingCells,
+        );
         console.log("not enough plants for level to beat");
         return;
       }

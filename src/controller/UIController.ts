@@ -50,7 +50,7 @@ export default class UIManager {
     this.writingText = this.scene.add.text(
       TEXT_X,
       TEXT_Y + GAME_CONFIG.UI.TEXT_PADDING + 8,
-    "Select plants below the screen\nPlants grow based on sun, \nwater, and nearby plants\nWalk to the planter box to start"
+      "Select plants below the screen\nPlants grow based on sun, \nwater, and nearby plants\nWalk to the planter box to start",
     ).setScale(1.5).setOrigin(0.5).setAlpha(1);
 
     this.reapBtn = this.scene.add
@@ -59,20 +59,20 @@ export default class UIManager {
       .setScale(3)
       .on("pointerdown", () => this.advanceGame("reap"));
 
-      this.sowBtn = this.scene.add
+    this.sowBtn = this.scene.add
       .sprite(TEXT_X + 200, TEXT_Y + 75, "sowButton", 0)
       .setAlpha(0)
       .setScale(3)
       .on("pointerdown", () => this.advanceGame("sow"));
 
-      this.undoBtn = this.scene.add
+    this.undoBtn = this.scene.add
       .sprite(
         GAME_CONFIG.UI.BORDER_PADDING,
         (this.scene.game.config.height as number) -
           GAME_CONFIG.UI.BORDER_PADDING * 2.5 -
           30,
         "undoButton",
-        0
+        0,
       )
       .setScale(3).setInteractive().on("pointerdown", () => this.undo());
 
@@ -83,11 +83,12 @@ export default class UIManager {
           GAME_CONFIG.UI.BORDER_PADDING * 2.5 +
           30,
         "redoButton",
-        0
+        0,
       )
       .setScale(3).setInteractive().on("pointerdown", () => this.redo());
 
-    this.updateText = this.scene.add.text(0, 0, "").setAlpha(0).setScale(2).setOrigin(0.5, 0.5);
+    this.updateText = this.scene.add.text(0, 0, "").setAlpha(0).setScale(2)
+      .setOrigin(0.5, 0.5);
   }
 
   setTurnText(turnCounter: string) {
@@ -96,7 +97,7 @@ export default class UIManager {
 
   openWindow() {
     this.writingText.setText(
-      `         Select a planter box`
+      `         Select a planter box`,
     ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
     this.scene.add.tween({
       targets: [this.writingBox, this.writingText, this.reapBtn, this.sowBtn],
@@ -123,15 +124,15 @@ export default class UIManager {
     });
   }
 
-  updateTextTween(x: number, y: number, text: string){
+  updateTextTween(x: number, y: number, text: string) {
     this.updateText.setText(text);
     this.scene.add.tween({
       targets: [this.updateText],
-      alpha: {from:1, to: 0},
-      x: {from: x, to: x},
-      y: {from: y - 50, to: y - 100},
+      alpha: { from: 1, to: 0 },
+      x: { from: x, to: x },
+      y: { from: y - 50, to: y - 100 },
       duration: 500,
-    })
+    });
   }
 
   advanceGame(action: string) {
@@ -157,7 +158,7 @@ export default class UIManager {
     ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
 
     // shows buttons only if box is shown
-    if(this.writingBox.alpha != 0){
+    if (this.writingBox.alpha != 0) {
       this.reapBtn.setAlpha(1);
       this.sowBtn.setAlpha(1);
       this.reapBtn.setInteractive();
@@ -170,7 +171,7 @@ export default class UIManager {
       `       Select plants below the screen
         Plants grow based on sun, water, and nearby plants
         You need a certain number of plants to beat the level
-        Select a planter box to start`
+        Select a planter box to start`,
     ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
 
     this.reapBtn.setAlpha(0);
@@ -179,13 +180,18 @@ export default class UIManager {
     this.sowBtn.setInteractive(false);
   }
 
-  updateLevelRequirements(species: string, amount: number, growthLevel: number, currAmount: number) {
+  updateLevelRequirements(
+    species: string,
+    amount: number,
+    growthLevel: number,
+    currAmount: number,
+  ) {
     this.writingText.setText(
       `        It is a new day!
         You need ${amount} box(es) of ${species} 
         at growth level ${growthLevel}
         to complete this level
-        You currently have ${currAmount}`
+        You currently have ${currAmount}`,
     ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
 
     this.reapBtn.setAlpha(0);
@@ -194,18 +200,18 @@ export default class UIManager {
     this.sowBtn.setInteractive(false);
   }
 
-  updateWinText(){
+  updateWinText() {
     this.writingText.setText(
-      `        You beat the level!`
+      `        You beat the level!`,
     ).setX(this.writingBox.x - GAME_CONFIG.UI.TEXT_PADDING);
   }
 
-  undo(){
+  undo() {
     this.scene.events.emit("undoEvent");
     // console.log("Undo Button pressed");
   }
 
-  redo(){
+  redo() {
     this.scene.events.emit("redoEvent");
     // console.log("Redo Button pressed");
   }
